@@ -1,10 +1,26 @@
 import React from 'react';
 
+/**
+ * Props for the Button component.
+ * Extends standard HTML button attributes.
+ */
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** The visual style variant of the button. Defaults to 'primary'. */
   variant?: 'primary' | 'secondary' | 'outline';
+  /** Whether the button should take up the full width of its container. Defaults to false. */
   fullWidth?: boolean;
 }
 
+/**
+ * A reusable button component with various styles and behaviors.
+ *
+ * @param props - The props for the button.
+ * @param props.children - The content to display inside the button.
+ * @param props.variant - The style variant ('primary', 'secondary', 'outline').
+ * @param props.fullWidth - If true, the button expands to fill the container width.
+ * @param props.className - Additional CSS classes to apply.
+ * @returns A styled HTML button element.
+ */
 export const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'primary', 

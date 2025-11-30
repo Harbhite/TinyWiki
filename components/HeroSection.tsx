@@ -1,22 +1,47 @@
 import React, { useState } from 'react';
 import { FileData } from '../types';
 
+/**
+ * Props for the HeroSection component.
+ */
 interface HeroSectionProps {
+  /** Callback function invoked when files are selected or dropped. */
   onFilesSelected: (files: FileData[]) => void;
 }
 
+/**
+ * The main landing section of the application.
+ * Allows users to drag and drop files or select them via a file input.
+ *
+ * @param props - The props for the component.
+ * @param props.onFilesSelected - Handler for file selection.
+ * @returns The HeroSection component.
+ */
 export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => {
   const [isDragging, setIsDragging] = useState(false);
 
+  /**
+   * Handles the dragover event to indicate that files can be dropped.
+   * @param e - The drag event.
+   */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
+  /**
+   * Handles the dragleave event to reset the drag state.
+   */
   const handleDragLeave = () => {
     setIsDragging(false);
   };
 
+  /**
+   * Processes the list of files selected by the user.
+   * Filters for valid types (PDF, image, text) and reads them as Data URLs.
+   *
+   * @param fileList - The list of files to process.
+   */
   const processFiles = (fileList: FileList | null) => {
     if (!fileList) return;
 
@@ -50,12 +75,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
     });
   };
 
+  /**
+   * Handles the drop event when files are dropped onto the drop zone.
+   * @param e - The drag event.
+   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     processFiles(e.dataTransfer.files);
   };
 
+  /**
+   * Handles the change event for the file input element.
+   * @param e - The change event.
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     processFiles(e.target.files);
   };
@@ -185,6 +218,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
   );
 };
 
+/**
+ * A helper component for displaying feature cards in the HeroSection.
+ *
+ * @param props - The props for the card.
+ * @param props.emoji - The emoji icon to display.
+ * @param props.title - The title of the feature.
+ * @param props.desc - The description of the feature.
+ * @param props.color - The background color class for the icon container.
+ * @param props.rotate - The rotation class for the card.
+ */
 const FeatureCard = ({ emoji, title, desc, color, rotate }: { emoji: string, title: string, desc: string, color: string, rotate: string }) => (
   <div className={`bg-white border-2 border-black p-8 rounded-xl shadow-hard hover:shadow-hard-lg transition-all hover:-translate-y-1 ${rotate}`}>
     <div className={`w-14 h-14 ${color} border-2 border-black rounded-lg flex items-center justify-center text-3xl mb-4 shadow-sm`}>

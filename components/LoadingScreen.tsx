@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
+/**
+ * A loading screen component that displays a rotating set of messages
+ * while the application is processing data.
+ *
+ * @returns The LoadingScreen component.
+ */
 export const LoadingScreen: React.FC = () => {
   const messages = [
     "Reading your messy handwriting...",
