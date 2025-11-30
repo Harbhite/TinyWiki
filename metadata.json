@@ -1,0 +1,5 @@
+{
+  "name": "TinyWiki",
+  "description": "Transform your documents into simplified, beautiful, and explained Wiki-style pages using Gemini AI.",
+  "requestFramePermissions": []
+}
