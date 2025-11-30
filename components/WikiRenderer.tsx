@@ -2,11 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { WikiData } from '../types';
 import { Button } from './Button';
 
+/**
+ * Props for the WikiRenderer component.
+ */
 interface WikiRendererProps {
+  /** The structured wiki data to be displayed. */
   data: WikiData;
+  /** Callback function to reset the application state (e.g., start over). */
   onReset: () => void;
 }
 
+/**
+ * Renders the generated wiki content, including the table of contents,
+ * executive summary, sections, key points, citations, and related topics.
+ * Also handles deep linking and sharing.
+ *
+ * @param props - The props for the component.
+ * @param props.data - The wiki data to render.
+ * @param props.onReset - Function to reset the view.
+ * @returns The WikiRenderer component.
+ */
 export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => {
   const [activeSection, setActiveSection] = useState<number>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
@@ -29,6 +44,10 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
     }
   }, [data.sections.length]);
 
+  /**
+   * Scrolls to the specified section index.
+   * @param index - The index of the section to scroll to.
+   */
   const handleScrollToSection = (index: number) => {
     setActiveSection(index);
     const element = document.getElementById(`section-${index}`);
@@ -39,6 +58,10 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
     }
   };
 
+  /**
+   * Generates a shareable link with the current wiki data encoded in the URL
+   * and copies it to the clipboard.
+   */
   const handleCopyLink = () => {
     try {
       // Encode data: JSON -> URI Component -> Base64
@@ -57,6 +80,11 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
     }
   };
 
+  /**
+   * Formats raw markdown-like content (specifically bold text) into React elements.
+   * @param content - The string content to format.
+   * @returns An array of strings and React elements.
+   */
   const formatContent = (content: string) => {
     // Basic markdown-ish formatting for bold/italic
     const parts = content.split(/(\*\*.*?\*\*)/g);

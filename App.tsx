@@ -5,6 +5,13 @@ import { WikiRenderer } from './components/WikiRenderer';
 import { AppState, FileData, WikiData } from './types';
 import { generateWikiFromFiles } from './services/geminiService';
 
+/**
+ * The main application component.
+ * Manages the high-level state of the application (IDLE, PROCESSING, VIEWING, ERROR)
+ * and coordinates data flow between the HeroSection, LoadingScreen, and WikiRenderer.
+ *
+ * @returns The root App component.
+ */
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
@@ -35,6 +42,12 @@ const App: React.FC = () => {
     }
   }, []);
 
+  /**
+   * Handles the files selected by the user in the HeroSection.
+   * Initiates the wiki generation process.
+   *
+   * @param files - The array of files selected by the user.
+   */
   const handleFilesSelected = async (files: FileData[]) => {
     setAppState(AppState.PROCESSING);
     setErrorMsg(null);
@@ -49,6 +62,10 @@ const App: React.FC = () => {
     }
   };
 
+  /**
+   * Resets the application to its initial state.
+   * Clears the wiki data and any error messages, and returns to the HeroSection.
+   */
   const resetApp = () => {
     // Clear URL parameters to prevent reloading the shared view on refresh
     window.history.pushState({}, '', window.location.pathname);

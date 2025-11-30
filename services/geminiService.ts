@@ -1,6 +1,13 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { FileData, WikiData } from "../types";
 
+/**
+ * Processes a file object to prepare it for the Gemini API.
+ * Extracts the Base64 data if it includes a data URL prefix.
+ *
+ * @param file - The file data to process.
+ * @returns An object containing the inline data and mime type formatted for the API.
+ */
 const processFile = (file: FileData) => {
   // Extract base64 part if it contains the data URL prefix
   const base64Data = file.data.includes('base64,') 
@@ -15,6 +22,10 @@ const processFile = (file: FileData) => {
   };
 };
 
+/**
+ * The schema definition for the expected JSON response from the Gemini API.
+ * Defines the structure of the generated wiki, including title, summary, sections, and related topics.
+ */
 const wikiSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -51,6 +62,13 @@ const wikiSchema: Schema = {
   required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics"]
 };
 
+/**
+ * Generates a structured wiki entry from a list of files using the Google Gemini API.
+ *
+ * @param files - An array of `FileData` objects representing the documents to analyze.
+ * @returns A promise that resolves to a `WikiData` object containing the generated wiki content.
+ * @throws Will throw an error if the API key is missing or if the API call fails.
+ */
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
