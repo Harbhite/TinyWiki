@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WikiData } from '../types';
 import { Button } from './Button';
 
@@ -11,6 +11,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
   const [activeSection, setActiveSection] = useState<number>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
+  const [isGlossaryOpen, setIsGlossaryOpen] = useState(false);
 
   // Handle deep linking on mount
   useEffect(() => {
@@ -37,6 +38,43 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
     }
   }, [data.sections.length]);
 
+  // Extract Glossary Terms from content
+  const glossary = useMemo(() => {
+    const extracted = new Map<string, string>();
+    
+    data.sections.forEach(section => {
+        // Regex to find **term**
+        const regex = /\*\*([^*]+)\*\*/g;
+        let match;
+        while ((match = regex.exec(section.content)) !== null) {
+            const term = match[1].trim();
+            // Skip very short terms or simple numbers
+            if (term.length < 2 || !isNaN(Number(term))) continue;
+            
+            // Avoid duplicates (case-insensitive check, preserve first casing)
+            const lowerTerm = term.toLowerCase();
+            const existingKey = Array.from(extracted.keys()).find(k => k.toLowerCase() === lowerTerm);
+            if (existingKey) continue;
+
+            // Attempt to extract definition from context
+            const restOfText = section.content.slice(match.index! + match[0].length);
+            const defRegex = /^([:,\s—–-]+(?:is|are|refers to|means)?\s*)([^.\n]+)/i;
+            const defMatch = restOfText.match(defRegex);
+            
+            let definition = "";
+            if (defMatch && defMatch[2]) {
+                definition = defMatch[2].trim();
+                if (definition.length > 150) definition = definition.substring(0, 150) + "...";
+                definition = definition.charAt(0).toUpperCase() + definition.slice(1);
+            }
+            
+            extracted.set(term, definition);
+        }
+    });
+
+    return Array.from(extracted.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [data]);
+
   const toggleSection = (index: number) => {
     setCollapsedSections(prev => {
       const next = new Set(prev);
@@ -50,7 +88,6 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
   };
 
   const handleScrollToSection = (index: number) => {
-    // Expand if collapsed
     if (collapsedSections.has(index)) {
       setCollapsedSections(prev => {
         const next = new Set(prev);
@@ -81,6 +118,81 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
       console.error("Failed to copy link", err);
       alert("This content is too large to generate a shareable link.");
     }
+  };
+
+  const handleExportMarkdown = () => {
+    let md = `# ${data.title}\n\n`;
+    md += `*${data.summary}*\n\n---\n\n`;
+    
+    data.sections.forEach((sec, idx) => {
+        md += `## ${idx + 1}. ${sec.heading}\n\n`;
+        md += `${sec.content}\n\n`;
+        
+        if (sec.keyPoints?.length) {
+            md += `### Key Takeaways\n`;
+            sec.keyPoints.forEach(kp => md += `- ${kp}\n`);
+            md += `\n`;
+        }
+        
+        if (sec.citations?.length) {
+            md += `**References:** ${sec.citations.join(', ')}\n\n`;
+        }
+        md += `---\n\n`;
+    });
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.title.replace(/\s+/g, '_')}_wiki.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportWord = () => {
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset="utf-8">
+        <title>${data.title}</title>
+        <style>
+          body { font-family: 'Calibri', sans-serif; }
+          h1 { font-size: 24pt; color: #000; }
+          h2 { font-size: 18pt; color: #333; margin-top: 20px; }
+          p { font-size: 11pt; line-height: 1.5; text-align: justify; }
+          .key-points { background: #fef08a; padding: 10px; border: 1px solid #000; }
+          .citations { font-size: 9pt; color: #666; font-style: italic; }
+        </style>
+      </head>
+      <body>
+        <h1>${data.title}</h1>
+        <p><i>${data.summary}</i></p>
+        <hr/>
+        ${data.sections.map((sec, i) => `
+          <h2>${i + 1}. ${sec.heading}</h2>
+          <div>${sec.content.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br/>')}</div>
+          
+          <div class="key-points">
+            <h3>Key Takeaways</h3>
+            <ul>
+              ${sec.keyPoints.map(kp => `<li>${kp}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <p class="citations">References: ${sec.citations.join(', ')}</p>
+          <hr/>
+        `).join('')}
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.title.replace(/\s+/g, '_')}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const formatContent = (content: string) => {
@@ -139,13 +251,29 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
              </Button>
              
              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" onClick={() => window.print()} className="text-sm py-2 px-2 flex justify-center">
-                   PDF
+                <Button variant="outline" onClick={() => window.print()} className="text-sm py-2 px-2 flex justify-center items-center gap-1" title="Print this page">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
+                   </svg>
+                   Print
                 </Button>
-                <Button variant="outline" onClick={onReset} className="text-sm py-2 px-2 border-dashed text-gray-500 hover:text-black hover:border-solid flex justify-center">
-                   New
+                <Button variant="outline" onClick={handleExportWord} className="text-sm py-2 px-2 flex justify-center items-center gap-1" title="Export as Word (.doc)">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                   </svg>
+                   DOC
                 </Button>
              </div>
+             <Button variant="outline" fullWidth onClick={handleExportMarkdown} className="text-sm py-2 px-2 flex justify-center items-center gap-1" title="Export as Markdown">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
+                   </svg>
+                   Export MD
+             </Button>
+
+             <Button variant="outline" onClick={onReset} className="w-full text-sm py-2 px-2 border-dashed text-gray-500 hover:text-black hover:border-solid flex justify-center mt-4">
+                New Wiki
+             </Button>
         </div>
       </aside>
 
@@ -298,6 +426,43 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset }) => 
                 );
             })}
         </div>
+
+        {/* Glossary Section */}
+        {glossary.length > 0 && (
+            <div className="mt-16 mb-16 print:mt-12 print:mb-8 print:break-inside-avoid">
+               <div 
+                 onClick={() => setIsGlossaryOpen(!isGlossaryOpen)}
+                 className="bg-black text-white p-6 rounded-xl border-2 border-black shadow-hard flex items-center justify-between cursor-pointer hover:bg-gray-900 transition-colors print:hidden"
+               >
+                  <div className="flex items-center gap-4">
+                     <span className="text-2xl">📖</span>
+                     <h3 className="font-serif text-2xl font-bold">Glossary of Terms</h3>
+                     <span className="bg-white text-black text-xs font-bold px-3 py-1 rounded-full">{glossary.length}</span>
+                  </div>
+                  <svg className={`w-6 h-6 transition-transform ${isGlossaryOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5-7.5-7.5" />
+                  </svg>
+               </div>
+
+               {/* Print Header for Glossary (visible in print) */}
+               <div className="hidden print:flex items-center gap-4 mb-4 border-b-2 border-black pb-2">
+                   <h3 className="font-serif text-2xl font-bold">📖 Glossary of Terms</h3>
+               </div>
+
+               <div className={`${isGlossaryOpen ? 'block' : 'hidden'} print:block print:bg-transparent bg-white border-x-2 border-b-2 border-black rounded-b-xl p-6 md:p-8 animate-in slide-in-from-top-2 print:border-0 print:p-0`}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:gap-4">
+                      {glossary.map(([term, def], i) => (
+                          <div key={i} className="p-4 bg-gray-50 border border-black/10 rounded-lg print:border-black print:bg-white print:break-inside-avoid">
+                              <div className="font-bold text-tiny-purple font-mono mb-2 text-lg print:text-black">{term}</div>
+                              <div className="text-sm text-gray-700 leading-relaxed font-medium print:text-gray-900">
+                                 {def || <span className="italic text-gray-400">Mentioned in text.</span>}
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+               </div>
+            </div>
+        )}
 
         {/* Related Topics Section */}
         {data.relatedTopics && data.relatedTopics.length > 0 && (

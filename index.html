@@ -69,32 +69,50 @@
           print-color-adjust: exact !important;
           background-image: none !important;
           background-color: white !important;
+          overflow: visible !important;
         }
         
-        /* Critical resets for multi-page printing */
-        html, body, #root {
+        /* Critical resets for multi-page printing in SPAs */
+        html, body, #root, main, .min-h-screen {
           height: auto !important;
-          min-height: auto !important;
+          min-height: 0 !important;
           overflow: visible !important;
           display: block !important;
           position: relative !important;
-        }
-        
-        /* Disable animations to ensure content is fully visible */
-        *, *::before, *::after {
-          animation: none !important;
-          transition: none !important;
-          opacity: 1 !important;
+          width: 100% !important;
+          max-width: 100% !important;
         }
 
+        /* Hide sidebar and other non-print elements */
+        aside, header, .print\:hidden {
+          display: none !important;
+        }
+
+        /* Ensure text is black and readable */
+        p, h1, h2, h3, h4, h5, h6, li, span {
+          color: black !important;
+          text-shadow: none !important;
+        }
+        
+        /* Force block display for content wrappers to prevent cutting */
+        .print\:block {
+          display: block !important;
+        }
+        
         /* Prevent breaks inside important elements */
         h1, h2, h3 {
           page-break-after: avoid;
           break-after: avoid;
         }
-        p, li {
+        .prose p {
           orphans: 3; 
           widows: 3;
+        }
+        
+        /* Reset shadows for cleaner print */
+        * {
+          box-shadow: none !important;
+          text-shadow: none !important;
         }
       }
     </style>
