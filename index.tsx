@@ -1,7 +1,3 @@
-/**
- * Entry point for the React application.
- * Finds the root element in the DOM and renders the App component.
- */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

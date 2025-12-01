@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TinyWiki - AI Learning Companion</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
@@ -15,6 +15,7 @@
             fontFamily: {
               serif: ['"DM Serif Display"', 'serif'],
               sans: ['Inter', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
             },
             colors: {
               'tiny-purple': '#A78BFA',
@@ -22,11 +23,16 @@
               'tiny-pink': '#FBCFE8',
               'tiny-green': '#A7F3D0',
               'tiny-orange': '#FDBA74',
+              'tiny-blue': '#BFDBFE',
             },
             boxShadow: {
               'hard': '4px 4px 0px 0px rgba(0,0,0,1)',
               'hard-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
               'hard-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+              'hard-xl': '12px 12px 0px 0px rgba(0,0,0,1)',
+            },
+            backgroundImage: {
+              'dot-pattern': 'radial-gradient(#cbd5e1 2px, transparent 2px)',
             }
           }
         }
@@ -34,12 +40,11 @@
     </script>
     <style>
       body {
-        background-color: #fff;
-        background-image: 
-          linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-          linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-        background-size: 20px 20px;
+        background-color: #fafafa;
+        background-image: radial-gradient(#d4d4d8 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
       }
+      
       .scrollbar-hide::-webkit-scrollbar {
           display: none;
       }
@@ -47,10 +52,16 @@
           -ms-overflow-style: none;
           scrollbar-width: none;
       }
+
+      /* Custom selection color */
+      ::selection {
+        background-color: #FEF08A; /* tiny-yellow */
+        color: black;
+      }
       
       @media print {
         @page {
-          margin: 1.5cm;
+          margin: 1cm;
           size: auto;
         }
         body {
@@ -59,15 +70,31 @@
           background-image: none !important;
           background-color: white !important;
         }
-        /* Resets for print layout */
+        
+        /* Critical resets for multi-page printing */
         html, body, #root {
           height: auto !important;
+          min-height: auto !important;
           overflow: visible !important;
           display: block !important;
+          position: relative !important;
         }
-        /* Ensure shadows and borders print correctly */
-        * {
-          print-color-adjust: exact !important;
+        
+        /* Disable animations to ensure content is fully visible */
+        *, *::before, *::after {
+          animation: none !important;
+          transition: none !important;
+          opacity: 1 !important;
+        }
+
+        /* Prevent breaks inside important elements */
+        h1, h2, h3 {
+          page-break-after: avoid;
+          break-after: avoid;
+        }
+        p, li {
+          orphans: 3; 
+          widows: 3;
         }
       }
     </style>
