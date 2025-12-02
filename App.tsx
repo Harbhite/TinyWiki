@@ -42,10 +42,17 @@ const App: React.FC = () => {
       const data = await generateWikiFromFiles(files);
       setWikiData(data);
       setAppState(AppState.VIEWING);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       setAppState(AppState.ERROR);
-      setErrorMsg("Oops! Something went wrong while analyzing your documents. Please try again.");
+      // Show specific error message if available, otherwise fallback to generic one
+      let message = "Oops! Something went wrong while analyzing your documents. Please try again.";
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === 'string') {
+        message = error;
+      }
+      setErrorMsg(message);
     }
   };
 
