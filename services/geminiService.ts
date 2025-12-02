@@ -52,9 +52,10 @@ const wikiSchema: Schema = {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  const apiKey = process.env.API_KEY;
+  // Accessing the API key exposed via vite.config.ts define
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key is missing. Please set GEMINI_API_KEY in .env.local");
   }
 
   const ai = new GoogleGenAI({ apiKey });
