@@ -53,7 +53,7 @@ const wikiSchema: Schema = {
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
   // Accessing the API key exposed via vite.config.ts define
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = "AIzaSyC4liBDPe9Db6-cN09q5GKymwf8d8-MMxM";
   if (!apiKey) {
     throw new Error("API Key is missing. Please set GEMINI_API_KEY in .env.local");
   }
