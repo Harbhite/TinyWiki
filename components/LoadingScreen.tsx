@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 export const LoadingScreen: React.FC = () => {
   const messages = [
-    "Reading your messy handwriting...",
-    "Consulting the digital library...",
-    "Highlighting the important stuff...",
-    "Brewing a fresh pot of knowledge...",
-    "Organizing the chaos...",
-    "Asking Gemini for a summary..."
+    "Reading your materials...",
+    "Synthesizing knowledge...",
+    "Highlighting key concepts...",
+    "Organizing the flow...",
+    "Almost there..."
   ];
 
   const [messageIndex, setMessageIndex] = useState(0);
@@ -20,13 +19,22 @@ export const LoadingScreen: React.FC = () => {
   }, [messages.length]);
 
   return (
-    <div className="fixed inset-0 bg-tiny-yellow flex flex-col items-center justify-center z-50">
-      <div className="bg-white p-8 border-2 border-black shadow-hard-lg rounded-xl max-w-md w-full text-center">
-        <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-        <h2 className="font-serif text-3xl mb-4">Hang tight!</h2>
-        <p className="text-lg font-medium animate-pulse transition-all duration-500">
+    <div className="fixed inset-0 bg-beige-bg flex flex-col items-center justify-center z-50">
+      <div className="bg-white p-10 rounded-[2rem] shadow-soft max-w-sm w-full text-center relative overflow-hidden">
+        <svg className="absolute -left-10 -bottom-10 w-32 h-32 text-soft-sage opacity-20" viewBox="0 0 100 100" fill="currentColor">
+           <circle cx="50" cy="50" r="50" />
+        </svg>
+
+        <div className="w-12 h-12 border-4 border-terracotta border-t-transparent rounded-full animate-spin mx-auto mb-8"></div>
+        
+        <h2 className="font-serif text-2xl text-earth-brown mb-4">Crafting Wiki</h2>
+        <p className="text-gray-500 font-light animate-pulse transition-all duration-500">
           {messages[messageIndex]}
         </p>
+      </div>
+
+      <div className="absolute bottom-12 text-center">
+        <p className="font-hand text-3xl md:text-4xl text-terracotta font-extrabold tracking-wide">Made by Habibi with ❤️</p>
       </div>
     </div>
   );

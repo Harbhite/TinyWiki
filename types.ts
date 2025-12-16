@@ -23,5 +23,7 @@ export enum AppState {
   IDLE = 'IDLE',
   PROCESSING = 'PROCESSING',
   VIEWING = 'VIEWING',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  ABOUT = 'ABOUT',
+  FEATURES = 'FEATURES'
 }

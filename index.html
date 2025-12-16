@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TinyWiki - AI Learning Companion</title>
+    <title>TinyWiki - Organic Learning</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
@@ -15,34 +15,45 @@
             fontFamily: {
               serif: ['"DM Serif Display"', 'serif'],
               sans: ['Inter', 'sans-serif'],
-              mono: ['"JetBrains Mono"', 'monospace'],
+              hand: ['"Nanum Pen Script"', 'cursive'],
             },
             colors: {
-              'tiny-purple': '#A78BFA',
-              'tiny-yellow': '#FEF08A',
-              'tiny-pink': '#FBCFE8',
-              'tiny-green': '#A7F3D0',
-              'tiny-orange': '#FDBA74',
-              'tiny-blue': '#BFDBFE',
+              'beige-bg': '#FDFCF8',
+              'earth-brown': '#272320',
+              'terracotta': '#C56E47',
+              'soft-sage': '#94A795',
+              'soft-yellow': '#EFE6D5',
+              'charcoal': '#374151',
             },
             boxShadow: {
-              'hard': '4px 4px 0px 0px rgba(0,0,0,1)',
-              'hard-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
-              'hard-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
-              'hard-xl': '12px 12px 0px 0px rgba(0,0,0,1)',
+              'soft': '0 4px 30px -5px rgba(39, 35, 32, 0.04)',
+              'soft-hover': '0 10px 40px -5px rgba(39, 35, 32, 0.08)',
             },
-            backgroundImage: {
-              'dot-pattern': 'radial-gradient(#cbd5e1 2px, transparent 2px)',
-            }
+            typography: (theme) => ({
+              DEFAULT: {
+                css: {
+                  color: theme('colors.earth-brown'),
+                  a: {
+                    color: theme('colors.terracotta'),
+                    '&:hover': {
+                      color: theme('colors.earth-brown'),
+                    },
+                  },
+                },
+              },
+            }),
           }
         }
       }
     </script>
     <style>
+      html {
+        scroll-behavior: smooth;
+      }
       body {
-        background-color: #fafafa;
-        background-image: radial-gradient(#d4d4d8 1.5px, transparent 1.5px);
-        background-size: 24px 24px;
+        background-color: #FDFCF8;
+        color: #272320;
+        -webkit-font-smoothing: antialiased;
       }
       
       .scrollbar-hide::-webkit-scrollbar {
@@ -53,67 +64,25 @@
           scrollbar-width: none;
       }
 
-      /* Custom selection color */
       ::selection {
-        background-color: #FEF08A; /* tiny-yellow */
-        color: black;
+        background-color: #EFE6D5;
+        color: #272320;
       }
-      
+
       @media print {
-        @page {
-          margin: 1cm;
-          size: auto;
-        }
-        body {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          background-image: none !important;
+        @page { margin: 1cm; size: auto; }
+        html, body {
+          height: auto;
+          overflow: visible;
           background-color: white !important;
-          overflow: visible !important;
-        }
-        
-        /* Critical resets for multi-page printing in SPAs */
-        html, body, #root, main, .min-h-screen {
-          height: auto !important;
-          min-height: 0 !important;
-          overflow: visible !important;
-          display: block !important;
-          position: relative !important;
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-
-        /* Hide sidebar and other non-print elements */
-        aside, header, .print\:hidden {
-          display: none !important;
-        }
-
-        /* Ensure text is black and readable */
-        p, h1, h2, h3, h4, h5, h6, li, span {
           color: black !important;
-          text-shadow: none !important;
         }
-        
-        /* Force block display for content wrappers to prevent cutting */
-        .print\:block {
-          display: block !important;
+        #root {
+          height: auto;
+          overflow: visible;
         }
-        
-        /* Prevent breaks inside important elements */
-        h1, h2, h3 {
-          page-break-after: avoid;
-          break-after: avoid;
-        }
-        .prose p {
-          orphans: 3; 
-          widows: 3;
-        }
-        
-        /* Reset shadows for cleaner print */
-        * {
-          box-shadow: none !important;
-          text-shadow: none !important;
-        }
+        .print-hidden { display: none !important; }
+        .no-break { break-inside: avoid; }
       }
     </style>
   <script type="importmap">
@@ -129,6 +98,5 @@
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

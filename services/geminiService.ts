@@ -1,4 +1,5 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
+import type { Schema } from "@google/genai";
 import { FileData, WikiData } from "../types";
 
 const processFile = (file: FileData) => {
@@ -51,11 +52,33 @@ const wikiSchema: Schema = {
   required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics"]
 };
 
+// Shared helper to parse and clean response
+const parseGeminiResponse = (text: string | undefined): WikiData => {
+  if (!text) throw new Error("No response from AI");
+  
+  let cleanText = text.trim();
+  
+  // Robust extraction of JSON object to handle markdown fences or pre/post text
+  const firstBrace = cleanText.indexOf('{');
+  const lastBrace = cleanText.lastIndexOf('}');
+  
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    cleanText = cleanText.substring(firstBrace, lastBrace + 1);
+  }
+
+  try {
+    return JSON.parse(cleanText) as WikiData;
+  } catch (error) {
+    console.error("JSON Parse Error:", error);
+    console.error("Raw Text:", text);
+    throw new Error("Failed to parse the generated content. Please try again.");
+  }
+};
+
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  // Accessing the API key exposed via vite.config.ts define
-  const apiKey = "AIzaSyC4liBDPe9Db6-cN09q5GKymwf8d8-MMxM";
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    throw new Error("API Key is missing. Please set GEMINI_API_KEY in .env.local");
+    throw new Error("API Key is missing.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -95,17 +118,63 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.2, // Lower temperature for more focused and coherent output
+        temperature: 0.2, 
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No response from AI");
-
-    return JSON.parse(text) as WikiData;
+    return parseGeminiResponse(response.text);
 
   } catch (error) {
     console.error("Gemini API Error:", error);
+    throw error;
+  }
+};
+
+export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `
+    You are an expert educational content creator.
+    Your task is to generate a comprehensive, structured Wiki entry for the topic: "${topic}".
+    
+    OBJECTIVE:
+    Create a summarized yet explained "wikied bit" regarding this topic. It should serve as a standalone learning resource.
+    
+    GUIDELINES:
+    1. **Narrative Consistency**: Ensure a logical flow.
+    2. **Deep Explanation**: Explain the concept deeply but simply.
+    3. **Tone**: Educational, clear, slightly playful but authoritative.
+    4. **Formatting**: Use Markdown. Use **bold** for key terms.
+    5. **Citations**: Since you are generating this from general knowledge, use the citations field to list Key Concepts, Historical Context, or Standard Reference Works associated with the facts.
+    6. **Structure**: 3-5 sections maximum. Keep it focused.
+    
+    AUDIENCE:
+    A curious learner exploring this specific sub-topic.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        role: 'user',
+        parts: [{ text: prompt }]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: wikiSchema,
+        temperature: 0.3, 
+      }
+    });
+
+    return parseGeminiResponse(response.text);
+
+  } catch (error) {
+    console.error("Gemini API Error (Topic):", error);
     throw error;
   }
 };
