@@ -77,10 +77,11 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
   // Try all possible injection points
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+  // We prioritize the keys injected by Vite define (which we normalized in vite.config.ts)
+  const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
 
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key is missing. Please check your environment variables (GEMINI_API_KEY).");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -134,10 +135,10 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
   // Try all possible injection points
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+  const apiKey = import.meta.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
 
   if (!apiKey) {
-    throw new Error("API Key is missing.");
+    throw new Error("API Key is missing. Please check your environment variables (GEMINI_API_KEY).");
   }
 
   const ai = new GoogleGenAI({ apiKey });
