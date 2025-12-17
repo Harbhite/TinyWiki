@@ -45,10 +45,10 @@ const App: React.FC = () => {
       setWikiData(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
-      console.error(error);
+      console.error("Analysis Error:", error);
       setAppState(AppState.ERROR);
 
-      let message = "Oops! Something went wrong while analyzing your documents. Please try again.";
+      let message = "Something went wrong while analyzing your documents. Please check your API key.";
       if (error instanceof Error) message = error.message;
       else if (typeof error === 'string') message = error;
 
@@ -65,10 +65,10 @@ const App: React.FC = () => {
       setWikiData(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
-       console.error(error);
+       console.error("Topic Generation Error:", error);
        setAppState(AppState.ERROR);
 
-       let message = "Failed to generate content for this topic. Please try again.";
+       let message = "Failed to generate content. Please check your connection or API key.";
        if (error instanceof Error) message = error.message;
        else if (typeof error === 'string') message = error;
 
