@@ -3,10 +3,24 @@ import { FileData } from '../types';
 
 interface HeroSectionProps {
   onFilesSelected: (files: FileData[]) => void;
+  onTopicSelected: (topic: string) => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTopicSelected }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [topic, setTopic] = useState('');
+
+  const placeholders = [
+    "Quantum Physics",
+    "The History of Rome",
+    "How Photosynthesis works",
+    "Modern Architecture",
+    "Deep Sea Biology",
+    "The French Revolution",
+    "Machine Learning Basics"
+  ];
+
+  const randomPlaceholder = placeholders[Math.floor(Math.random() * placeholders.length)];
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -18,7 +32,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
   };
 
   const isFileAccepted = (file: File) => {
-    // Robust check for MIME types and Extensions
     const name = file.name.toLowerCase();
     const type = file.type.toLowerCase();
 
@@ -35,7 +48,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
     const hasValidExtension = allowedExtensions.some(ext => name.endsWith(ext));
     const hasValidMime = allowedMimes.some(mime => type.includes(mime));
 
-    // Accept if either extension or mime is valid (some browsers report empty mime for markdown/obscure types)
     return hasValidExtension || hasValidMime;
   };
 
@@ -56,7 +68,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
         reader.onload = () => {
           resolve({
             name: file.name,
-            type: file.type || 'application/octet-stream', // Fallback type
+            type: file.type || 'application/octet-stream',
             data: reader.result as string
           });
         };
@@ -81,6 +93,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
     processFiles(e.target.files);
   };
 
+  const handleTopicSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (topic.trim()) {
+      onTopicSelected(topic.trim());
+    }
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 pb-20 pt-4 flex flex-col items-center justify-center min-h-[85vh] relative">
       
@@ -103,10 +122,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
         </p>
       </div>
 
-      {/* Upload Card */}
-      <div className="w-full max-w-xl relative">
+      {/* Main Interaction Area */}
+      <div className="w-full max-w-2xl space-y-8">
+        
+        {/* Upload Card */}
         <div className="bg-white rounded-[2rem] shadow-soft p-2 transition-transform duration-500 hover:shadow-lg">
-          
           <div 
             className={`
               rounded-[1.5rem] border border-dashed
@@ -139,11 +159,41 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
                 onChange={handleInputChange}
               />
               <span className="bg-earth-brown text-white text-lg px-8 py-3 rounded-full hover:bg-terracotta transition-colors shadow-sm hover:shadow-md inline-flex items-center gap-2">
-                Start Learning
+                Analyze Files
               </span>
             </label>
           </div>
         </div>
+
+        {/* OR Divider */}
+        <div className="flex items-center gap-4 text-earth-brown/20 font-serif italic text-xl">
+          <div className="h-px bg-current flex-1"></div>
+          <span>or</span>
+          <div className="h-px bg-current flex-1"></div>
+        </div>
+
+        {/* Topic Input Field */}
+        <form onSubmit={handleTopicSubmit} className="relative group">
+          <input 
+            type="text"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder={`e.g., ${randomPlaceholder}...`}
+            className="w-full bg-white border border-[#E5E0D8] rounded-full px-8 py-5 text-lg text-earth-brown placeholder:text-earth-brown/30 focus:outline-none focus:border-terracotta transition-all shadow-soft group-hover:shadow-lg pr-32"
+          />
+          <button 
+            type="submit"
+            disabled={!topic.trim()}
+            className={`
+              absolute right-2 top-2 bottom-2 px-6 rounded-full font-medium transition-all
+              ${topic.trim() 
+                ? 'bg-terracotta text-white hover:bg-earth-brown active:scale-95' 
+                : 'bg-earth-brown/5 text-earth-brown/20 cursor-not-allowed'}
+            `}
+          >
+            Generate
+          </button>
+        </form>
       </div>
       
       <div className="mt-16 flex gap-12 text-earth-brown/50 text-sm font-medium tracking-wide justify-center flex-wrap">

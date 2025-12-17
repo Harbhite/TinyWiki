@@ -12,14 +12,12 @@ const App: React.FC = () => {
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Check for shared wiki data in URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shareData = params.get('share');
     if (shareData) {
       try {
-        setAppState(AppState.PROCESSING); // Show loading briefly
-        // Decode base64 -> uri decode -> json parse
+        setAppState(AppState.PROCESSING);
         const jsonStr = decodeURIComponent(atob(shareData));
         const data = JSON.parse(jsonStr) as WikiData;
         
@@ -45,14 +43,9 @@ const App: React.FC = () => {
       setWikiData(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
-      console.error("Analysis Error:", error);
+      console.error(error);
       setAppState(AppState.ERROR);
-
-      let message = "Something went wrong while analyzing your documents. Please check your API key.";
-      if (error instanceof Error) message = error.message;
-      else if (typeof error === 'string') message = error;
-
-      setErrorMsg(message);
+      setErrorMsg(error.message || "Something went wrong while analyzing your documents. Please check your files and try again.");
     }
   };
 
@@ -65,14 +58,9 @@ const App: React.FC = () => {
       setWikiData(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
-       console.error("Topic Generation Error:", error);
+       console.error(error);
        setAppState(AppState.ERROR);
-
-       let message = "Failed to generate content. Please check your connection or API key.";
-       if (error instanceof Error) message = error.message;
-       else if (typeof error === 'string') message = error;
-
-       setErrorMsg(message);
+       setErrorMsg(error.message || "Failed to generate content for this topic.");
     }
   };
 
@@ -91,7 +79,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen font-sans text-earth-brown selection:bg-terracotta selection:text-white bg-beige-bg">
-      {/* Persistent Header */}
       <header className="px-6 py-4 md:px-12 md:py-6 flex items-center justify-between sticky top-0 z-40 bg-beige-bg/80 backdrop-blur-md border-b border-earth-brown/5 transition-all duration-300">
         <div className="cursor-pointer group flex items-center gap-2" onClick={resetApp}>
           <span className="font-serif text-2xl font-bold text-earth-brown group-hover:text-terracotta transition-colors">
@@ -126,10 +113,9 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main View Switcher */}
       <main className="transition-opacity duration-300 ease-in-out">
         {appState === AppState.IDLE && (
-          <HeroSection onFilesSelected={handleFilesSelected} />
+          <HeroSection onFilesSelected={handleFilesSelected} onTopicSelected={handleTopicSelected} />
         )}
 
         {appState === AppState.ABOUT && (
@@ -149,19 +135,12 @@ const App: React.FC = () => {
         )}
 
         {appState === AppState.ERROR && (
-          <div className="min-h-[80vh] flex items-center justify-center flex-col p-4 relative overflow-hidden">
-             <div className="bg-white p-12 rounded-[2rem] shadow-soft max-w-md text-center relative z-10">
-               <div className="w-20 h-20 bg-soft-yellow/30 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 text-terracotta">
-                  !
-               </div>
+          <div className="min-h-[80vh] flex items-center justify-center flex-col p-4">
+             <div className="bg-white p-12 rounded-[2rem] shadow-soft max-w-md text-center">
+               <div className="w-20 h-20 bg-soft-yellow/30 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 text-terracotta">!</div>
                <h2 className="text-3xl font-serif text-earth-brown mb-3">Something went wrong</h2>
                <p className="mb-8 text-gray-500 font-light">{errorMsg}</p>
-               <button 
-                  onClick={resetApp}
-                  className="w-full bg-earth-brown text-white px-6 py-4 rounded-full font-medium hover:bg-terracotta transition-colors shadow-lg"
-               >
-                  Try Again
-               </button>
+               <button onClick={resetApp} className="w-full bg-earth-brown text-white px-6 py-4 rounded-full font-medium hover:bg-terracotta transition-colors shadow-lg">Back to Home</button>
              </div>
           </div>
         )}
