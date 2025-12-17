@@ -44,10 +44,15 @@ const App: React.FC = () => {
       const data = await generateWikiFromFiles(files);
       setWikiData(data);
       setAppState(AppState.VIEWING);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setAppState(AppState.ERROR);
-      setErrorMsg("Oops! Something went wrong while analyzing your documents. Please try again.");
+
+      let message = "Oops! Something went wrong while analyzing your documents. Please try again.";
+      if (error instanceof Error) message = error.message;
+      else if (typeof error === 'string') message = error;
+
+      setErrorMsg(message);
     }
   };
 
@@ -59,10 +64,15 @@ const App: React.FC = () => {
       const data = await generateWikiFromTopic(topic);
       setWikiData(data);
       setAppState(AppState.VIEWING);
-    } catch (error) {
+    } catch (error: any) {
        console.error(error);
        setAppState(AppState.ERROR);
-       setErrorMsg("Failed to generate content for this topic. Please try again.");
+
+       let message = "Failed to generate content for this topic. Please try again.";
+       if (error instanceof Error) message = error.message;
+       else if (typeof error === 'string') message = error;
+
+       setErrorMsg(message);
     }
   };
 
