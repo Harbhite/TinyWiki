@@ -202,7 +202,15 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     
     const element = document.getElementById(`section-${index}`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Offset by header height approx 80-90px
+      const headerOffset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
       window.history.replaceState(null, '', `#section-${index}`);
     }
   };
@@ -214,20 +222,13 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
       const sectionIdx = history[newIndex];
       setActiveSection(sectionIdx);
       
-      // Ensure we expand the section we are going back to
       setCollapsedSections(prev => {
         const next = new Set(prev);
         next.delete(sectionIdx);
         return next;
       });
 
-      setTimeout(() => {
-        const element = document.getElementById(`section-${sectionIdx}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.history.replaceState(null, '', `#section-${sectionIdx}`);
-        }
-      }, 0);
+      setTimeout(() => handleScrollToSection(sectionIdx), 0);
     }
   };
 
@@ -238,20 +239,13 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
       const sectionIdx = history[newIndex];
       setActiveSection(sectionIdx);
 
-      // Ensure we expand the section we are going forward to
       setCollapsedSections(prev => {
         const next = new Set(prev);
         next.delete(sectionIdx);
         return next;
       });
 
-      setTimeout(() => {
-        const element = document.getElementById(`section-${sectionIdx}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.history.replaceState(null, '', `#section-${sectionIdx}`);
-        }
-      }, 0);
+      setTimeout(() => handleScrollToSection(sectionIdx), 0);
     }
   };
 
@@ -340,7 +334,6 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     URL.revokeObjectURL(url);
   };
 
-  // Helper to convert basic markdown to HTML for Word export
   const markdownToHtml = (text: string): string => {
     if (!text) return '';
     return text
@@ -353,21 +346,11 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
   };
 
   const handleExportWord = () => {
-    // Construct valid HTML for Word with minimal namespaces
     const htmlContent = `<!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
 <meta charset='utf-8'>
 <title>${data.title}</title>
-<!--[if gte mso 9]>
-<xml>
-<w:WordDocument>
-<w:View>Print</w:View>
-<w:Zoom>100</w:Zoom>
-<w:DoNotOptimizeForBrowser/>
-</w:WordDocument>
-</xml>
-<![endif]-->
 <style>
 body { font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; }
 h1 { font-size: 24pt; color: #C56E47; margin-bottom: 12pt; }
@@ -375,7 +358,6 @@ h2 { font-size: 18pt; color: #272320; margin-top: 18pt; margin-bottom: 6pt; }
 h3 { font-size: 14pt; color: #94A795; margin-top: 12pt; }
 p { margin-bottom: 12pt; line-height: 1.5; }
 li { margin-bottom: 4pt; }
-.citation { font-size: 10pt; color: #666; border: 1px dotted #ccc; padding: 2px 4px; }
 </style>
 </head>
 <body>
@@ -387,13 +369,10 @@ ${data.sections?.map(section => `
 <p>${markdownToHtml(section.content || '')}</p>
 <h3>Key Takeaways</h3>
 <ul>${section.keyPoints?.map(p => `<li>${p}</li>`).join('') || ''}</ul>
-<h3>Sources</h3>
-<ul>${section.citations?.map(c => `<li><span class="citation">${c}</span></li>`).join('') || ''}</ul>
 `).join('')}
 </body>
 </html>`;
     
-    // Use application/vnd.ms-word to indicate Word content
     const blob = new Blob(['\ufeff', htmlContent], {
       type: 'application/vnd.ms-word'
     });
@@ -427,7 +406,7 @@ ${data.sections?.map(section => `
     <div className="min-h-screen bg-beige-bg flex flex-col md:flex-row print:bg-white print:block">
       
       {/* Navigation Sidebar */}
-      <aside className="w-full md:w-72 bg-[#F7F5EE] md:h-screen md:sticky md:top-0 overflow-y-auto z-20 print:hidden flex flex-col border-r border-[#EBE8DE]">
+      <aside className="w-full md:w-72 bg-[#F7F5EE] md:h-[calc(100vh-5rem)] md:sticky md:top-20 overflow-y-auto z-20 print:hidden flex flex-col border-r border-[#EBE8DE]">
         <div className="p-8">
           <div className="font-serif text-2xl text-earth-brown mb-2 leading-tight">{data.title}</div>
           
@@ -487,7 +466,12 @@ ${data.sections?.map(section => `
                 <button
                     onClick={() => {
                         const el = document.getElementById('glossary-section');
-                        if(el) el.scrollIntoView({behavior: 'smooth'})
+                        if(el) {
+                           const headerOffset = 100;
+                           const elementPosition = el.getBoundingClientRect().top;
+                           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                           window.scrollTo({ top: offsetPosition, behavior: 'smooth'});
+                        }
                     }}
                     className="w-full text-left py-2 px-3 rounded-lg transition-all text-sm font-medium flex items-center gap-3 text-earth-brown/60 hover:bg-earth-brown/5 hover:translate-x-1"
                 >
@@ -529,6 +513,7 @@ ${data.sections?.map(section => `
 
       {/* Main Content */}
       <main className="flex-1 p-6 md:p-16 max-w-4xl mx-auto print:max-w-none print:w-full print:p-0">
+        {/* ... Rest of content unchanged ... */}
         
         <div className="hidden print:block mb-8">
            <h1 className="font-serif text-4xl text-black mb-2">{data.title}</h1>

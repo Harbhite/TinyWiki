@@ -1,5 +1,4 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Schema } from "@google/genai";
 import { FileData, WikiData } from "../types";
 
 const processFile = (file: FileData) => {
@@ -16,7 +15,8 @@ const processFile = (file: FileData) => {
   };
 };
 
-const wikiSchema: Schema = {
+// Define schema as a plain object to avoid type import issues at runtime
+const wikiSchema = {
   type: Type.OBJECT,
   properties: {
     title: { type: Type.STRING, description: "A catchy, clear title for the material." },
@@ -87,7 +87,7 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
   
   const prompt = `
     You are an expert educational content creator and wiki editor. 
-    Your task is to transform the attached raw documents (PDFs, slides, notes) into a beautifully structured, cohesive Wiki entry.
+    Your task is to transform the attached raw documents (which may include PDFs, Images, Word Docs, or Slides) into a beautifully structured, cohesive Wiki entry.
     
     OBJECTIVE:
     Create a learning resource that feels like a coherent article, not just a disjointed summary. 

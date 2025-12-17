@@ -79,46 +79,42 @@ const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const isNavigationVisible = appState === AppState.IDLE || appState === AppState.ABOUT || appState === AppState.FEATURES;
-
   return (
     <div className="min-h-screen font-sans text-earth-brown selection:bg-terracotta selection:text-white bg-beige-bg">
       {/* Persistent Header */}
-      {isNavigationVisible && (
-        <header className="p-8 md:px-12 flex items-center justify-between sticky top-0 z-40 bg-beige-bg/95 backdrop-blur-sm transition-all duration-300">
-          <div className="cursor-pointer group" onClick={resetApp}>
-            <span className="font-serif text-2xl font-bold text-earth-brown group-hover:text-terracotta transition-colors">
-              tiny.<span className="font-light italic">wiki</span>
-            </span>
-            <svg className="w-12 h-2 text-soft-sage mt-1 group-hover:w-full transition-all duration-500" viewBox="0 0 100 10" preserveAspectRatio="none">
-               <path d="M0,5 Q50,0 100,5" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-          </div>
+      <header className="px-6 py-4 md:px-12 md:py-6 flex items-center justify-between sticky top-0 z-40 bg-beige-bg/80 backdrop-blur-md border-b border-earth-brown/5 transition-all duration-300">
+        <div className="cursor-pointer group flex items-center gap-2" onClick={resetApp}>
+          <span className="font-serif text-2xl font-bold text-earth-brown group-hover:text-terracotta transition-colors">
+            tiny.<span className="font-light italic">wiki</span>
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-4 md:gap-8">
+          <nav className="flex gap-4 md:gap-8 font-medium text-sm text-earth-brown/60">
+            <button 
+              onClick={() => navigateTo(AppState.ABOUT)}
+              className={`transition-colors hover:text-earth-brown ${appState === AppState.ABOUT ? 'text-terracotta font-semibold' : ''}`}
+            >
+              about
+            </button>
+            <button 
+              onClick={() => navigateTo(AppState.FEATURES)}
+              className={`transition-colors hover:text-earth-brown ${appState === AppState.FEATURES ? 'text-terracotta font-semibold' : ''}`}
+            >
+              features
+            </button>
+          </nav>
           
-          <div className="flex items-center gap-6">
-            <nav className="hidden md:flex gap-8 font-medium text-sm text-earth-brown/60">
-              <button 
-                onClick={() => navigateTo(AppState.ABOUT)}
-                className={`transition-colors hover:text-earth-brown ${appState === AppState.ABOUT ? 'text-terracotta font-semibold' : ''}`}
-              >
-                about
-              </button>
-              <button 
-                onClick={() => navigateTo(AppState.FEATURES)}
-                className={`transition-colors hover:text-earth-brown ${appState === AppState.FEATURES ? 'text-terracotta font-semibold' : ''}`}
-              >
-                features
-              </button>
-            </nav>
+          {appState !== AppState.IDLE && (
             <button 
               onClick={resetApp}
-              className="bg-earth-brown text-white px-6 py-2 rounded-full font-medium text-sm hover:bg-terracotta transition-colors shadow-soft active:scale-95"
+              className="hidden md:block bg-earth-brown text-white px-5 py-2 rounded-full font-medium text-xs hover:bg-terracotta transition-colors shadow-soft active:scale-95"
             >
-              Start Learning
+              New Wiki
             </button>
-          </div>
-        </header>
-      )}
+          )}
+        </div>
+      </header>
 
       {/* Main View Switcher */}
       <main className="transition-opacity duration-300 ease-in-out">

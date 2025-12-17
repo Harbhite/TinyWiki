@@ -18,17 +18,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
   };
 
   const isFileAccepted = (file: File) => {
-    const acceptedTypes = [
+    // Robust check for MIME types and Extensions
+    const name = file.name.toLowerCase();
+    const type = file.type.toLowerCase();
+
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.md', '.jpg', '.jpeg', '.png', '.webp'];
+    const allowedMimes = [
       'application/pdf',
       'image/',
       'text/',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
-      'application/msword', // doc
-      'application/vnd.ms-powerpoint' // ppt
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument',
+      'application/vnd.ms-powerpoint'
     ];
-    
-    return acceptedTypes.some(type => file.type.includes(type) || (type.endsWith('/') && file.type.startsWith(type)));
+
+    const hasValidExtension = allowedExtensions.some(ext => name.endsWith(ext));
+    const hasValidMime = allowedMimes.some(mime => type.includes(mime));
+
+    // Accept if either extension or mime is valid (some browsers report empty mime for markdown/obscure types)
+    return hasValidExtension || hasValidMime;
   };
 
   const processFiles = (fileList: FileList | null) => {
@@ -38,7 +46,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
     const validFiles = filesArray.filter(isFileAccepted);
 
     if (validFiles.length === 0) {
-      alert("Please upload supported files: PDF, DOCX, Slides, Images, or Text.");
+      alert("Please upload supported files: PDF, Word (DOCX), PowerPoint (PPTX), Images, or Text.");
       return;
     }
 
@@ -48,15 +56,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
         reader.onload = () => {
           resolve({
             name: file.name,
-            type: file.type || 'application/octet-stream',
+            type: file.type || 'application/octet-stream', // Fallback type
             data: reader.result as string
           });
         };
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
         reader.readAsDataURL(file);
       });
     })).then(results => {
       onFilesSelected(results);
+    }).catch(error => {
+      console.error("File processing error:", error);
+      alert("An error occurred while reading your files. Please try again.");
     });
   };
 
@@ -71,7 +82,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 pb-20 pt-12 flex flex-col items-center justify-center min-h-[85vh] relative">
+    <div className="w-full max-w-7xl mx-auto px-4 pb-20 pt-4 flex flex-col items-center justify-center min-h-[85vh] relative">
       
       {/* Hero Content */}
       <div className="text-center max-w-3xl mx-auto mb-16">
@@ -116,7 +127,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
 
             <h3 className="font-serif text-2xl text-earth-brown mb-2">Upload your materials</h3>
             <p className="text-earth-brown/40 mb-8 font-light text-sm">
-              PDFs, Docs, Slides, and Images are welcome.
+              PDFs, Word Docs, PPT Slides, Images & Text.
             </p>
 
             <label className="cursor-pointer">
@@ -135,7 +146,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected }) => 
         </div>
       </div>
       
-      <div className="mt-16 flex gap-12 text-earth-brown/50 text-sm font-medium tracking-wide">
+      <div className="mt-16 flex gap-12 text-earth-brown/50 text-sm font-medium tracking-wide justify-center flex-wrap">
          <span className="flex items-center gap-3">
            <span className="w-1.5 h-1.5 bg-soft-sage rounded-full"></span> Simplified
          </span>
