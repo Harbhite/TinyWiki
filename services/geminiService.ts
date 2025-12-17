@@ -76,7 +76,9 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  const apiKey = process.env.API_KEY;
+  // Try all possible injection points
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+
   if (!apiKey) {
     throw new Error("API Key is missing.");
   }
@@ -131,7 +133,9 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 };
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
-  const apiKey = process.env.API_KEY;
+  // Try all possible injection points
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+
   if (!apiKey) {
     throw new Error("API Key is missing.");
   }
