@@ -166,7 +166,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Type a topic to explore..."
+            placeholder="e.g., Quantum Physics or The History of Rome"
             className="w-full bg-white border border-[#E5E0D8] rounded-full px-8 py-5 text-lg text-earth-brown placeholder:text-earth-brown/30 focus:outline-none focus:border-terracotta transition-all shadow-soft group-hover:shadow-lg pr-32"
           />
           <button 

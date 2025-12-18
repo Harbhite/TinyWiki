@@ -1,19 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FileData, WikiData } from "../types";
 
-// Safe access to environment variables in a browser context
-const getApiKey = (): string | undefined => {
-  try {
-    // Check if process and process.env exist to avoid ReferenceError
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      return process.env.API_KEY;
-    }
-  } catch (e) {
-    console.warn("Could not access process.env.API_KEY safely.");
-  }
-  return undefined;
-};
-
 const processFile = (file: FileData) => {
   // Extract base64 part if it contains the data URL prefix
   const base64Data = file.data.includes('base64,') 
@@ -84,12 +71,8 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error("Missing API Key. Please configure API_KEY in your environment variables.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const fileParts = files.map(processFile);
   
   const prompt = `
@@ -121,12 +104,8 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 };
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error("Missing API Key. Please configure API_KEY in your environment variables.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     Generate a comprehensive, structured Wiki entry for the topic: "${topic}".

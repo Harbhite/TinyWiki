@@ -12,16 +12,9 @@ const App: React.FC = () => {
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Check for environment variables and shared data on mount
+  // Check for shared data on mount
   useEffect(() => {
-    // 1. Check for API key (infusion check)
-    // Safe check to prevent process is not defined errors on certain platforms
-    const isApiKeyMissing = typeof process === 'undefined' || !process.env || !process.env.API_KEY;
-    if (isApiKeyMissing) {
-      console.error("TinyWiki: API_KEY is not defined in environment variables.");
-    }
-
-    // 2. Check for shared wiki data in URL
+    // Check for shared wiki data in URL
     const params = new URLSearchParams(window.location.search);
     const shareData = params.get('share');
     if (shareData) {
