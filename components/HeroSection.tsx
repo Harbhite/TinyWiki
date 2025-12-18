@@ -10,18 +10,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
   const [isDragging, setIsDragging] = useState(false);
   const [topic, setTopic] = useState('');
 
-  const placeholders = [
-    "Quantum Physics",
-    "The History of Rome",
-    "How Photosynthesis works",
-    "Modern Architecture",
-    "Deep Sea Biology",
-    "The French Revolution",
-    "Machine Learning Basics"
-  ];
-
-  const randomPlaceholder = placeholders[Math.floor(Math.random() * placeholders.length)];
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -178,7 +166,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder={`e.g., ${randomPlaceholder}...`}
+            placeholder="Type a topic to explore..."
             className="w-full bg-white border border-[#E5E0D8] rounded-full px-8 py-5 text-lg text-earth-brown placeholder:text-earth-brown/30 focus:outline-none focus:border-terracotta transition-all shadow-soft group-hover:shadow-lg pr-32"
           />
           <button 

@@ -12,7 +12,16 @@ const App: React.FC = () => {
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Check for environment variables and shared data on mount
   useEffect(() => {
+    // 1. Check for API key (infusion check)
+    // Safe check to prevent process is not defined errors on certain platforms
+    const isApiKeyMissing = typeof process === 'undefined' || !process.env || !process.env.API_KEY;
+    if (isApiKeyMissing) {
+      console.error("TinyWiki: API_KEY is not defined in environment variables.");
+    }
+
+    // 2. Check for shared wiki data in URL
     const params = new URLSearchParams(window.location.search);
     const shareData = params.get('share');
     if (shareData) {
@@ -45,7 +54,7 @@ const App: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       setAppState(AppState.ERROR);
-      setErrorMsg(error.message || "Something went wrong while analyzing your documents. Please check your files and try again.");
+      setErrorMsg(error.message || "Oops! Something went wrong while analyzing your documents. Please check your API configuration.");
     }
   };
 
@@ -60,7 +69,7 @@ const App: React.FC = () => {
     } catch (error: any) {
        console.error(error);
        setAppState(AppState.ERROR);
-       setErrorMsg(error.message || "Failed to generate content for this topic.");
+       setErrorMsg(error.message || "Failed to generate content for this topic. Please try again later.");
     }
   };
 
@@ -135,12 +144,19 @@ const App: React.FC = () => {
         )}
 
         {appState === AppState.ERROR && (
-          <div className="min-h-[80vh] flex items-center justify-center flex-col p-4">
-             <div className="bg-white p-12 rounded-[2rem] shadow-soft max-w-md text-center">
-               <div className="w-20 h-20 bg-soft-yellow/30 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 text-terracotta">!</div>
+          <div className="min-h-[80vh] flex items-center justify-center flex-col p-4 relative overflow-hidden">
+             <div className="bg-white p-12 rounded-[2rem] shadow-soft max-w-md text-center relative z-10">
+               <div className="w-20 h-20 bg-soft-yellow/30 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 text-terracotta">
+                  !
+               </div>
                <h2 className="text-3xl font-serif text-earth-brown mb-3">Something went wrong</h2>
-               <p className="mb-8 text-gray-500 font-light">{errorMsg}</p>
-               <button onClick={resetApp} className="w-full bg-earth-brown text-white px-6 py-4 rounded-full font-medium hover:bg-terracotta transition-colors shadow-lg">Back to Home</button>
+               <p className="mb-8 text-gray-500 font-light whitespace-pre-line">{errorMsg}</p>
+               <button 
+                  onClick={resetApp}
+                  className="w-full bg-earth-brown text-white px-6 py-4 rounded-full font-medium hover:bg-terracotta transition-colors shadow-lg"
+               >
+                  Back to Home
+               </button>
              </div>
           </div>
         )}
