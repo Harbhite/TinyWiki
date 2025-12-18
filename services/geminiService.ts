@@ -72,6 +72,7 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
   // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
+  // Using gemini-3-flash-preview for free quota compatibility and fast synthesis.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const fileParts = files.map(processFile);
   
@@ -84,7 +85,7 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: {
         role: 'user',
         parts: [{ text: prompt }, ...fileParts]
@@ -105,6 +106,7 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
   // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
+  // Using gemini-3-flash-preview for free quota compatibility.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
@@ -115,7 +117,7 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: {
         role: 'user',
         parts: [{ text: prompt }]
