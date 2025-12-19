@@ -2,7 +2,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FileData, WikiData } from "../types";
 
 const processFile = (file: FileData) => {
-  // Extract base64 part if it contains the data URL prefix
   const base64Data = file.data.includes('base64,') 
     ? file.data.split('base64,')[1] 
     : file.data;
@@ -18,25 +17,25 @@ const processFile = (file: FileData) => {
 const wikiSchema = {
   type: Type.OBJECT,
   properties: {
-    title: { type: Type.STRING, description: "A catchy, clear title for the material." },
-    summary: { type: Type.STRING, description: "A 2-3 sentence executive summary of the entire document." },
-    readingTimeMinutes: { type: Type.NUMBER, description: "Estimated reading time in minutes." },
+    title: { type: Type.STRING, description: "A high-level, professional title for the Wiki." },
+    summary: { type: Type.STRING, description: "A comprehensive executive summary (approx 150 words) that sets the stage." },
+    readingTimeMinutes: { type: Type.NUMBER, description: "Calculated reading time." },
     sections: {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
         properties: {
-          heading: { type: Type.STRING, description: "Section title." },
-          content: { type: Type.STRING, description: "Detailed, coherent explanation in Markdown. Explain concepts in depth." },
+          heading: { type: Type.STRING, description: "Descriptive section heading." },
+          content: { type: Type.STRING, description: "Long-form, detailed explanation in Markdown. Each section should be substantial (2-4 paragraphs minimum) with deep theoretical or practical insights. Use **bold** for key terms." },
           keyPoints: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "3-4 concise bullet points for this section."
+            description: "4-6 detailed takeaways for this section."
           },
           citations: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "Source references (e.g., 'Slide 5')."
+            description: "Specific source markers (e.g., 'Document: Page 4' or 'Slide 12')."
           }
         },
         required: ["heading", "content", "keyPoints", "citations"]
@@ -45,7 +44,7 @@ const wikiSchema = {
     relatedTopics: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "5 related concepts."
+      description: "Advanced related concepts for further study."
     }
   },
   required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics"]
@@ -71,15 +70,21 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  // Using gemini-3-flash-preview for maximum speed
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const fileParts = files.map(processFile);
   
   const prompt = `
-    You are an expert educational content creator. Transform these raw documents into a structured Wiki entry.
-    Objective: Create a coherent learning resource where concepts flow logically.
-    Guidelines: Deep explanations, Markdown formatting (**bold** definitions), and specific citations (e.g. 'Slide 4').
-    Return ONLY raw JSON.
+    You are an elite research analyst and educational architect. 
+    Analyze the provided materials and synthesize them into a HIGH-DETAIL, LONG-FORM Wiki entry.
+    
+    CRITICAL INSTRUCTIONS:
+    1. EXHAUSTIVE DEPTH: Do not skip nuances. Each section should be a deep dive.
+    2. EDUCATIONAL PROSE: Write in a sophisticated yet clear academic style.
+    3. FORMATTING: Use Markdown effectively. Define key terms in **bold** within the flow of text.
+    4. ACCURACY: Ensure citations are tied specifically to parts of the provided documents.
+    5. STRUCTURE: Create a logical narrative arc across sections.
+    
+    Return ONLY raw JSON according to the schema.
   `;
 
   try {
@@ -92,8 +97,8 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.1, // Lower temperature for faster, more predictable structured output
-        thinkingConfig: { thinkingBudget: 0 } // Disable thinking to reduce latency for this structural task
+        temperature: 0.1,
+        thinkingConfig: { thinkingBudget: 0 }
       }
     });
 
@@ -108,9 +113,14 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
-    Generate a comprehensive, structured Wiki entry for the topic: "${topic}".
-    Explain the concept deeply but simply. Use Markdown (**bold** for terms).
-    Return ONLY raw JSON.
+    Generate an exhaustive, high-detail professional Wiki entry for the topic: "${topic}".
+    
+    CRITICAL INSTRUCTIONS:
+    1. COMPREHENSIVE COVERAGE: Include historical context, core mechanics, modern applications, and future outlook.
+    2. VERBOSE QUALITY: Prioritize length and depth over brevity. Each section must be rich with information.
+    3. STYLE: Use beautiful Markdown. Identify and **bold** all major technical terms or key concepts.
+    
+    Return ONLY raw JSON according to the schema.
   `;
 
   try {
@@ -123,8 +133,8 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.2, 
-        thinkingConfig: { thinkingBudget: 0 } // Disable thinking for immediate content generation
+        temperature: 0.3, 
+        thinkingConfig: { thinkingBudget: 0 }
       }
     });
 
