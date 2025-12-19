@@ -71,8 +71,7 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
-  // Using gemini-3-flash-preview for free quota compatibility and fast synthesis.
+  // Using gemini-3-flash-preview for maximum speed
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const fileParts = files.map(processFile);
   
@@ -93,7 +92,8 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.2, 
+        temperature: 0.1, // Lower temperature for faster, more predictable structured output
+        thinkingConfig: { thinkingBudget: 0 } // Disable thinking to reduce latency for this structural task
       }
     });
 
@@ -105,8 +105,6 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 };
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
-  // Always use new GoogleGenAI({apiKey: process.env.API_KEY}) as per rules.
-  // Using gemini-3-flash-preview for free quota compatibility.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
@@ -125,7 +123,8 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.3, 
+        temperature: 0.2, 
+        thinkingConfig: { thinkingBudget: 0 } // Disable thinking for immediate content generation
       }
     });
 
