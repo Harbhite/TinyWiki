@@ -45,9 +45,9 @@ interface WikiRendererProps {
 }
 
 export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTopicSelect }) => {
-  const [activeSection, setActiveSection] = useState<number>(0);
+  const [activeSection, setActiveSection] = useState<number | string>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [ttsState, setTtsState] = useState<{ idx: number, status: 'playing' | 'paused' | 'stopped' }>({ idx: -1, status: 'stopped' });
+  const [ttsState, setTtsState] = useState<{ idx: number | string, status: 'playing' | 'paused' | 'stopped' }>({ idx: -1, status: 'stopped' });
 
   useEffect(() => {
     setActiveSection(0);
@@ -71,16 +71,20 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
             const defMatch = restOfText.match(defRegex);
             
             if (defMatch && defMatch[2]) {
-                map.set(term, defMatch[2].trim());
+                const definition = defMatch[2].trim();
+                // Avoid tiny or non-definition matches
+                if (definition.length > 5) {
+                   map.set(term, definition);
+                }
             } else if (!map.has(term)) {
-                map.set(term, "Defined within the context of this study.");
+                map.set(term, "Essential concept defined within the context of this synthesis.");
             }
         }
     });
     return map;
   }, [data]);
 
-  const handleScrollToSection = (index: number) => {
+  const handleScrollToSection = (index: number | string) => {
     setActiveSection(index);
     const element = document.getElementById(`section-${index}`);
     if (element) {
@@ -105,7 +109,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     }
   };
 
-  const handleTTS = (index: number, text: string) => {
+  const handleTTS = (index: number | string, text: string) => {
     if (!('speechSynthesis' in window)) return;
     const synth = window.speechSynthesis;
     if (ttsState.idx === index && ttsState.status === 'playing') {
@@ -137,12 +141,14 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     });
   };
 
+  const glossaryItems = Array.from(glossaryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col md:flex-row">
       
       {/* Sidebar - Neat & Minimal */}
       <aside className="w-full md:w-72 md:sticky md:top-0 md:h-screen border-r border-gray-100 p-8 flex flex-col bg-white print:hidden">
-        <div className="mb-10">
+        <div className="mb-10 overflow-y-auto scrollbar-hide flex-1">
           <h2 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-6">Contents</h2>
           <nav className="space-y-4">
             {data.sections?.map((section, idx) => (
@@ -157,6 +163,18 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                 <span className={activeSection === idx ? 'font-bold' : 'font-light'}>{section.heading}</span>
               </button>
             ))}
+            
+            {glossaryItems.length > 0 && (
+               <button
+                 onClick={() => handleScrollToSection('glossary')}
+                 className={`w-full text-left text-sm transition-all duration-300 flex items-start gap-3 group mt-6 pt-6 border-t border-gray-50 ${
+                   activeSection === 'glossary' ? 'text-terracotta' : 'text-gray-400 hover:text-earth-brown'
+                 }`}
+               >
+                 <span className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 transition-all ${activeSection === 'glossary' ? 'bg-terracotta scale-125' : 'bg-transparent border border-gray-200 group-hover:border-earth-brown'}`}></span>
+                 <span className={activeSection === 'glossary' ? 'font-bold' : 'font-light uppercase tracking-widest text-[10px]'}>Index Glossary</span>
+               </button>
+            )}
           </nav>
         </div>
 
@@ -273,9 +291,35 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
           ))}
         </div>
 
+        {/* Visible Glossary Section */}
+        {glossaryItems.length > 0 && (
+           <article id="section-glossary" className="px-8 md:px-20 py-24 bg-[#FCFCFC] scroll-mt-20">
+             <div className="max-w-3xl">
+               <div className="inline-block text-terracotta text-[10px] font-bold uppercase tracking-[0.4em] mb-4">
+                 Terminology Index
+               </div>
+               <h2 className="font-serif text-5xl text-earth-brown mb-12 tracking-tight">Glossary</h2>
+               
+               <div className="space-y-10">
+                 {glossaryItems.map(([term, definition], idx) => (
+                   <div key={idx} className="group border-b border-gray-100 pb-8 last:border-0">
+                     <dt className="text-xl font-bold text-earth-brown mb-2 group-hover:text-terracotta transition-colors flex items-center gap-3">
+                       <span className="w-2 h-2 bg-terracotta rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                       {term}
+                     </dt>
+                     <dd className="text-earth-brown/60 font-light leading-relaxed text-sm pl-5">
+                       {definition}
+                     </dd>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </article>
+        )}
+
         {/* Exploratory Footer */}
         {data.relatedTopics && data.relatedTopics.length > 0 && (
-          <footer className="bg-gray-50 px-8 md:px-20 py-24 text-center">
+          <footer className="bg-white px-8 md:px-20 py-24 text-center border-t border-gray-50">
             <h3 className="font-serif text-3xl text-earth-brown mb-12">Expand Topic Analysis</h3>
             <div className="flex flex-wrap gap-4 justify-center max-w-2xl mx-auto">
               {data.relatedTopics.map((topic, idx) => (
