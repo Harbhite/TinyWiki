@@ -147,7 +147,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
       
       {/* Clean Left Navigation */}
       <aside className="w-full md:w-72 md:sticky md:top-20 md:h-[calc(100vh-5rem)] border-r border-gray-100 p-8 flex flex-col bg-white print:hidden">
-        <div className="mb-10">
+        <div className="mb-8">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">On this page</h2>
           <nav className="space-y-3">
             {data.sections?.map((section, idx) => (
@@ -165,13 +165,34 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
           </nav>
         </div>
 
+        {/* Quick Actions Block */}
+        <div className="mb-10">
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Actions</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => window.print()} 
+              className="flex flex-col items-center justify-center p-3 bg-beige-bg rounded-2xl hover:bg-soft-yellow/30 transition-colors text-gray-500 hover:text-earth-brown"
+            >
+              <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+              <span className="text-[9px] font-bold uppercase tracking-wider">Print</span>
+            </button>
+            <button 
+              onClick={handleCopyLink} 
+              className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${copyFeedback ? 'bg-terracotta text-white' : 'bg-beige-bg text-gray-500 hover:text-earth-brown hover:bg-soft-yellow/30'}`}
+            >
+              <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+              <span className="text-[9px] font-bold uppercase tracking-wider">{copyFeedback ? 'Copied' : 'Share'}</span>
+            </button>
+          </div>
+        </div>
+
         <div className="mt-auto space-y-4">
-          <Button variant="outline" fullWidth onClick={handleCopyLink} className="text-xs py-2 px-4">
-            {copyFeedback ? 'Link Copied!' : 'Share Wiki'}
+          <Button variant="outline" fullWidth onClick={onReset} className="text-xs py-2 px-4">
+            Start New Wiki
           </Button>
-          <Button variant="text" fullWidth onClick={onReset} className="text-[10px] font-bold uppercase text-gray-400">
-            Start New Session
-          </Button>
+          <div className="text-center">
+            <p className="font-hand text-2xl text-terracotta/40 font-bold select-none">tiny.wiki</p>
+          </div>
         </div>
       </aside>
 
