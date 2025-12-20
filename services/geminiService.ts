@@ -17,25 +17,25 @@ const processFile = (file: FileData) => {
 const wikiSchema = {
   type: Type.OBJECT,
   properties: {
-    title: { type: Type.STRING, description: "A clear, engaging title for the Wiki." },
-    summary: { type: Type.STRING, description: "A comprehensive executive summary (approx 150-200 words) that explains the core essence using simple, relatable language." },
+    title: { type: Type.STRING, description: "A clear, professional title for the Wiki." },
+    summary: { type: Type.STRING, description: "A comprehensive summary (approx 150-200 words) that explains the core concepts using plain, direct language. No analogies." },
     readingTimeMinutes: { type: Type.NUMBER, description: "Calculated reading time." },
     sections: {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
         properties: {
-          heading: { type: Type.STRING, description: "Engaging and clear section heading." },
-          content: { type: Type.STRING, description: "Exhaustive, long-form explanation in Markdown. Use simple language, short sentences, and plenty of analogies. Each section should be very detailed (4-6 paragraphs minimum) but avoid dense jargon. Bold key terms (**term**)." },
+          heading: { type: Type.STRING, description: "Direct and descriptive section heading." },
+          content: { type: Type.STRING, description: "Exhaustive, long-form explanation in Markdown. Use simplified language and short, punchy sentences. Go straight to the point. DO NOT use analogies or metaphors. Each section should be very detailed (5-7 paragraphs) but purely factual and clear. Bold key terms (**term**)." },
           keyPoints: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "5-7 simplified takeaways that summarize the section's core lessons."
+            description: "5-7 direct, simplified takeaways that summarize the facts."
           },
           citations: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "Source markers (e.g., 'Page 5 of Document')."
+            description: "Source markers (e.g., 'Page 4')."
           }
         },
         required: ["heading", "content", "keyPoints", "citations"]
@@ -44,7 +44,7 @@ const wikiSchema = {
     relatedTopics: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Broader topics for further simple exploration."
+      description: "Directly related topics for further study."
     }
   },
   required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics"]
@@ -74,15 +74,15 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
   const fileParts = files.map(processFile);
   
   const prompt = `
-    You are a master educator who specializes in making complex subjects "simply exhaustive." 
-    Analyze the provided materials and create a massive, high-detail Wiki entry.
+    You are an expert technical writer known for extreme clarity and exhaustive detail. 
+    Analyze the materials and create a massive Wiki entry that is both simple and deep.
     
     CRITICAL INSTRUCTIONS:
-    1. EXTREME DEPTH: Each section must be a deep dive. Do not be brief.
-    2. SIMPLIFIED LANGUAGE: Use the vocabulary of a clear, friendly storyteller. Avoid "corporatespeak" or unnecessary academic complexity.
-    3. ANALOGIES: Use frequent analogies to explain difficult parts.
-    4. FORMATTING: Use clean Markdown. Bold (**term**) only the most important 5-10 concepts per section.
-    5. CITATIONS: Connect every section to the specific documents provided.
+    1. EXHAUSTIVE COVERAGE: Leave no detail behind. If a concept is in the source, explain it thoroughly.
+    2. ABSOLUTELY NO ANALOGIES: Do not use "it's like a..." or any metaphors. Explain the concepts directly for what they are.
+    3. SIMPLIFIED PROSE: Use plain, easy-to-understand words. Avoid jargon where a simple word suffices.
+    4. CONCISE SENTENCES: Keep sentences short and direct. No fluff or flowery introductions.
+    5. FORMATTING: Use clean Markdown. Bold (**term**) core concepts.
     
     Return ONLY raw JSON according to the schema.
   `;
@@ -116,10 +116,10 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
     Generate an exhaustive, highly detailed Wiki for the topic: "${topic}".
     
     CRITICAL INSTRUCTIONS:
-    1. STORYTELLER TONE: Explain as if you are a friendly expert talking to a curious friend.
-    2. VERBOSE DEPTH: Give me at least 4-5 long paragraphs per section. Cover everything.
-    3. NO JARGON: If you use a technical term, define it immediately in a simple way.
-    4. BEAUTIFUL MARKDOWN: Use headings and bolding to make the long text readable.
+    1. FACTUAL DEPTH: Provide a massive amount of detail. 5-7 long paragraphs per section.
+    2. NO ANALOGIES: Strictly avoid metaphors or analogies. Stick to direct, literal explanations.
+    3. SIMPLE LANGUAGE: Explain complex parts using the simplest factual language possible.
+    4. NEAT FORMATTING: Use headings and bolding for readability.
     
     Return ONLY raw JSON according to the schema.
   `;
@@ -134,7 +134,7 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
       config: {
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
-        temperature: 0.3, 
+        temperature: 0.2, 
         thinkingConfig: { thinkingBudget: 0 }
       }
     });
