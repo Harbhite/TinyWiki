@@ -25,6 +25,5 @@ export enum AppState {
   VIEWING = 'VIEWING',
   ERROR = 'ERROR',
   ABOUT = 'ABOUT',
-  FEATURES = 'FEATURES',
-  HISTORY = 'HISTORY'
+  FEATURES = 'FEATURES'
 }
