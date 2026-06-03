@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { WikiData } from '../types';
 import { Button } from './Button';
+import { chatWithWiki } from '../services/geminiService';
 
 // Component for interactive text with tooltip
 const GlossaryTerm: React.FC<{ term: string, definition?: string }> = ({ term, definition }) => {
@@ -48,11 +49,25 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
   const [activeSection, setActiveSection] = useState<number | string>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [ttsState, setTtsState] = useState<{ idx: number | string, status: 'playing' | 'paused' | 'stopped' }>({ idx: -1, status: 'stopped' });
+  
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveSection(0);
+    setChatMessages([]);
+    setIsChatOpen(false);
     if (window.speechSynthesis) window.speechSynthesis.cancel();
   }, [data]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, isChatOpen]);
 
   const glossaryMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -141,6 +156,26 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     });
   };
 
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    const newMessages = [...chatMessages, { role: 'user', content: userMessage }];
+    setChatMessages(newMessages);
+    setIsChatLoading(true);
+
+    try {
+      const response = await chatWithWiki(newMessages, data);
+      setChatMessages([...newMessages, { role: 'assistant', content: response.text }]);
+    } catch (err) {
+      setChatMessages([...newMessages, { role: 'assistant', content: 'Sorry, I encountered an error while thinking.' }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
   const glossaryItems = Array.from(glossaryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
   return (
@@ -181,7 +216,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
         <div className="mt-auto space-y-6">
           <div className="space-y-2">
             <h2 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-3">Tools</h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button 
                 onClick={() => window.print()} 
                 className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100"
@@ -196,6 +231,13 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                 <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                 <span className="text-[9px] font-bold uppercase">{copyFeedback ? 'Done' : 'Share'}</span>
               </button>
+              <button 
+                onClick={() => setIsChatOpen(!isChatOpen)} 
+                className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all border ${isChatOpen ? 'bg-terracotta text-white border-terracotta' : 'bg-gray-50 text-gray-400 hover:text-earth-brown hover:bg-gray-100 border-gray-100'}`}
+              >
+                <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                <span className="text-[9px] font-bold uppercase">QA Chat</span>
+              </button>
             </div>
           </div>
           
@@ -209,7 +251,8 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
       </aside>
 
       {/* Neat Content Column */}
-      <main className="flex-1 bg-white shadow-sm ring-1 ring-gray-100 my-0 md:my-0 md:max-w-4xl mx-auto min-h-screen">
+      <main className="flex-1 bg-white shadow-sm ring-1 ring-gray-100 my-0 md:my-0 mx-auto min-h-screen">
+
         
         {/* Abstract / Intro */}
         <header className="px-8 md:px-20 py-20 border-b border-gray-50 text-center">
@@ -335,6 +378,66 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
           </footer>
         )}
       </main>
+
+      {/* Chat Sidebar */}
+      <aside 
+        className={`fixed top-0 right-0 h-screen w-full md:w-80 bg-white border-l border-gray-100 shadow-xl flex flex-col transition-transform duration-300 z-50 ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-beige-bg">
+          <h3 className="font-serif text-2xl text-earth-brown">Wiki Chat</h3>
+          <button onClick={() => setIsChatOpen(false)} className="text-gray-400 hover:text-terracotta">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAFAFA]">
+          {chatMessages.length === 0 ? (
+            <div className="text-center text-earth-brown/40 font-light mt-10">
+              <p>Ask anything about this wiki.</p>
+              <p className="text-sm mt-2">I have full context of the content.</p>
+            </div>
+          ) : (
+            chatMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-terracotta text-white rounded-br-sm' : 'bg-white border border-gray-100 text-earth-brown shadow-sm rounded-bl-sm'}`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))
+          )}
+          {isChatLoading && (
+            <div className="flex justify-start">
+               <div className="max-w-[85%] rounded-2xl p-4 bg-white border border-gray-100 shadow-sm rounded-bl-sm flex gap-2 items-center">
+                 <div className="w-2 h-2 rounded-full bg-terracotta/40 animate-pulse"></div>
+                 <div className="w-2 h-2 rounded-full bg-terracotta/40 animate-pulse delay-75"></div>
+                 <div className="w-2 h-2 rounded-full bg-terracotta/40 animate-pulse delay-150"></div>
+               </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+
+        <form onSubmit={handleSendChat} className="p-4 bg-white border-t border-gray-50 flex gap-2">
+          <input 
+            type="text" 
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Ask a question..."
+            className="flex-1 bg-gray-50 border border-transparent rounded-full px-4 py-2 text-sm focus:outline-none focus:border-terracotta/30 focus:bg-white transition-all text-earth-brown"
+          />
+          <button 
+            type="submit"
+            disabled={!chatInput.trim() || isChatLoading}
+            className={`p-2 rounded-full ${chatInput.trim() && !isChatLoading ? 'bg-terracotta text-white' : 'bg-gray-100 text-gray-400'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+            </svg>
+          </button>
+        </form>
+      </aside>
     </div>
   );
 };
