@@ -76,12 +76,20 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
     body: JSON.stringify({ files }),
   });
   
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to generate wiki from files");
+  const textBody = await response.text();
+  let data;
+  try {
+    data = JSON.parse(textBody);
+  } catch (e) {
+    console.error("Non-JSON response from server:", textBody);
+    throw new Error("The server experienced an issue and returned an invalid format. Please try again.");
   }
   
-  return await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to generate wiki from files");
+  }
+  
+  return data;
 };
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
@@ -91,12 +99,20 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
     body: JSON.stringify({ topic }),
   });
   
+  const textBody = await response.text();
+  let data;
+  try {
+    data = JSON.parse(textBody);
+  } catch (e) {
+    console.error("Non-JSON response from server:", textBody);
+    throw new Error("The server experienced an issue and returned an invalid format. Please try again.");
+  }
+  
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to generate wiki from topic");
+    throw new Error(data.error || "Failed to generate wiki from topic");
   }
 
-  return await response.json();
+  return data;
 };
 
 export const chatWithWiki = async (messages: {role: string, content: string}[], wikiContext: WikiData) => {
@@ -106,10 +122,18 @@ export const chatWithWiki = async (messages: {role: string, content: string}[], 
     body: JSON.stringify({ messages, wikiContext }),
   });
   
+  const textBody = await response.text();
+  let data;
+  try {
+    data = JSON.parse(textBody);
+  } catch (e) {
+    console.error("Non-JSON response from server:", textBody);
+    throw new Error("The server experienced an issue and returned an invalid format. Please try again.");
+  }
+  
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to get chat response");
+    throw new Error(data.error || "Failed to get chat response");
   }
 
-  return await response.json();
+  return data;
 };

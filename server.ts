@@ -43,6 +43,17 @@ const parseGeminiResponse = (text: string | undefined) => {
   if (!text) throw new Error("No response received from the AI.");
   
   let cleanText = text.trim();
+  
+  // Remove markdown code block wrapping if present
+  if (cleanText.startsWith('```json')) {
+    cleanText = cleanText.substring(7);
+  } else if (cleanText.startsWith('```')) {
+    cleanText = cleanText.substring(3);
+  }
+  if (cleanText.endsWith('```')) {
+    cleanText = cleanText.substring(0, cleanText.length - 3);
+  }
+  
   const firstBrace = cleanText.indexOf('{');
   const lastBrace = cleanText.lastIndexOf('}');
   
@@ -122,7 +133,10 @@ async function startServer() {
       res.json(data);
     } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: error.message || "Failed to generate wiki from files" });
+      const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
+        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
+        : error.message || "Failed to generate wiki from files";
+      res.status(500).json({ error: msg });
     }
   });
 
@@ -162,7 +176,10 @@ async function startServer() {
       res.json(data);
     } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: error.message || "Failed to generate wiki from topic" });
+      const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
+        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
+        : error.message || "Failed to generate wiki from topic";
+      res.status(500).json({ error: msg });
     }
   });
 
@@ -215,7 +232,10 @@ async function startServer() {
       res.json({ text: response.text });
     } catch (error: any) {
        console.error(error);
-       res.status(500).json({ error: error.message || "Failed to get chat response" });
+       const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
+        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
+        : error.message || "Failed to get chat response";
+       res.status(500).json({ error: msg });
     }
   });
 
