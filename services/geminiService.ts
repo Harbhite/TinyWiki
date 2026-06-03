@@ -70,46 +70,78 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
 };
 
 export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData> => {
-  const response = await fetch("/api/generate-wiki-files", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ files }),
-  });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const fileParts = files.map(processFile);
   
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to generate wiki from files");
+  const prompt = `
+    You are an expert technical writer known for extreme clarity and exhaustive detail.
+    Analyze the materials and create a massive Wiki entry that is both simple and deep.
+
+    CRITICAL INSTRUCTIONS:
+    1. EXHAUSTIVE COVERAGE: Leave no detail behind. If a concept is in the source, explain it thoroughly.
+    2. ABSOLUTELY NO ANALOGIES: Do not use "it's like a..." or any metaphors. Explain the concepts directly for what they are.
+    3. SIMPLIFIED PROSE: Use plain, easy-to-understand words. Avoid jargon where a simple word suffices.
+    4. CONCISE SENTENCES: Keep sentences short and direct. No fluff or flowery introductions.
+    5. FORMATTING: Use clean Markdown. Bold (**term**) core concepts.
+
+    Return ONLY raw JSON according to the schema.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        role: 'user',
+        parts: [{ text: prompt }, ...fileParts]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: wikiSchema,
+        temperature: 0.1,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    });
+
+    return parseGeminiResponse(response.text);
+  } catch (error) {
+    console.error("Gemini Generation Error:", error);
+    throw error;
   }
-  
-  return await response.json();
 };
 
 export const generateWikiFromTopic = async (topic: string): Promise<WikiData> => {
-  const response = await fetch("/api/generate-wiki-topic", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to generate wiki from topic");
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const prompt = `
+    Generate an exhaustive, highly detailed Wiki for the topic: "${topic}".
+
+    CRITICAL INSTRUCTIONS:
+    1. FACTUAL DEPTH: Provide a massive amount of detail. 5-7 long paragraphs per section.
+    2. NO ANALOGIES: Strictly avoid metaphors or analogies. Stick to direct, literal explanations.
+    3. SIMPLE LANGUAGE: Explain complex parts using the simplest factual language possible.
+    4. NEAT FORMATTING: Use headings and bolding for readability.
+
+    Return ONLY raw JSON according to the schema.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        role: 'user',
+        parts: [{ text: prompt }]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: wikiSchema,
+        temperature: 0.2,
+        thinkingConfig: { thinkingBudget: 0 }
+      }
+    });
+
+    return parseGeminiResponse(response.text);
+  } catch (error) {
+    console.error("Topic Generation Error:", error);
+    throw error;
   }
-
-  return await response.json();
-};
-
-export const chatWithWiki = async (messages: {role: string, content: string}[], wikiContext: WikiData) => {
-  const response = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, wikiContext }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to get chat response");
-  }
-
-  return await response.json();
 };
