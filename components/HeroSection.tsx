@@ -135,7 +135,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
 
             <h3 className="font-serif text-2xl text-earth-brown mb-2">Upload your materials</h3>
             <p className="text-earth-brown/40 mb-8 font-light text-sm">
-              PDFs, Word Docs, PPT Slides, Images & Text.
+              PDFs, Word Docs, PPT Slides, Text, Infographics & Diagrams.
             </p>
 
             <label className="cursor-pointer">
@@ -166,7 +166,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., Quantum Physics or The History of Rome"
+            placeholder="e.g., Quantum Physics, or a YouTube video URL"
             className="w-full bg-white border border-[#E5E0D8] rounded-full px-8 py-5 text-lg text-earth-brown placeholder:text-earth-brown/30 focus:outline-none focus:border-terracotta transition-all shadow-soft group-hover:shadow-lg pr-32"
           />
           <button 

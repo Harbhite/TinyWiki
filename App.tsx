@@ -4,6 +4,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { WikiRenderer } from './components/WikiRenderer';
 import { AboutPage } from './components/AboutPage';
 import { FeaturesPage } from './components/FeaturesPage';
+import { HistoryVault } from './components/HistoryVault';
 import { AppState, FileData, WikiData } from './types';
 import { generateWikiFromFiles, generateWikiFromTopic } from './services/geminiService';
 
@@ -11,6 +12,19 @@ const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const saveToHistory = (data: WikiData) => {
+    try {
+      const saved = localStorage.getItem('tinywiki_history');
+      let history = saved ? JSON.parse(saved) : [];
+      // avoid duplicates by simple check or just push
+      const newItem = { id: crypto.randomUUID(), timestamp: Date.now(), data };
+      history = [newItem, ...history];
+      localStorage.setItem('tinywiki_history', JSON.stringify(history));
+    } catch (e) {
+      console.error("Failed to save to history", e);
+    }
+  };
 
   // Check for shared data on mount
   useEffect(() => {
@@ -25,6 +39,7 @@ const App: React.FC = () => {
         
         if (data && data.title && data.sections) {
           setWikiData(data);
+          saveToHistory(data);
           setAppState(AppState.VIEWING);
         } else {
           throw new Error("Invalid data format");
@@ -43,6 +58,7 @@ const App: React.FC = () => {
     try {
       const data = await generateWikiFromFiles(files);
       setWikiData(data);
+      saveToHistory(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
       console.error(error);
@@ -58,6 +74,7 @@ const App: React.FC = () => {
     try {
       const data = await generateWikiFromTopic(topic);
       setWikiData(data);
+      saveToHistory(data);
       setAppState(AppState.VIEWING);
     } catch (error: any) {
        console.error(error);
@@ -90,6 +107,12 @@ const App: React.FC = () => {
         
         <div className="flex items-center gap-4 md:gap-8">
           <nav className="flex gap-4 md:gap-8 font-medium text-sm text-earth-brown/60">
+            <button 
+              onClick={() => navigateTo(AppState.HISTORY)}
+              className={`transition-colors hover:text-earth-brown ${appState === AppState.HISTORY ? 'text-terracotta font-semibold' : ''}`}
+            >
+              library
+            </button>
             <button 
               onClick={() => navigateTo(AppState.ABOUT)}
               className={`transition-colors hover:text-earth-brown ${appState === AppState.ABOUT ? 'text-terracotta font-semibold' : ''}`}
@@ -126,6 +149,14 @@ const App: React.FC = () => {
 
         {appState === AppState.FEATURES && (
           <FeaturesPage onStart={resetApp} />
+        )}
+
+        {appState === AppState.HISTORY && (
+          <HistoryVault onSelect={(data) => {
+            setWikiData(data);
+            setAppState(AppState.VIEWING);
+            window.scrollTo(0, 0);
+          }} />
         )}
 
         {appState === AppState.PROCESSING && (
