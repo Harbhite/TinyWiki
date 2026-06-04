@@ -13,11 +13,12 @@ TinyWiki is a full-stack, AI-powered application that generates exhaustive, stru
 
 ## Architecture
 
-This project is built using a modern full-stack architecture:
+This project is built using a modern frontend architecture:
 
 - **Frontend**: React 18, Vite, Tailwind CSS, Lucide React (for icons)
-- **Backend**: Express (Node.js) handling server-side API generation 
-- **AI Integration**: `@google/genai` TypeScript SDK (Gemini 2.5 Flash)
+- **AI Integration**: `@google/genai` TypeScript SDK (Gemini 2.5 Flash) running client-side
+
+> **Warning**: This architecture currently initializes the Gemini API in the browser. For production deployments on Vercel or similar platforms, you should ensure your API key has appropriate domain restrictions or move the implementation to a backend/serverless function.
 
 ## Setup and Installation
 
@@ -32,9 +33,9 @@ This project is built using a modern full-stack architecture:
    npm install
    ```
 
-2. Create a `.env` file in the root of your project and add your Gemini API Key:
+2. Create a `.env` file in the root of your project and add your Gemini API Key using the `VITE_` prefix:
    ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
 3. Run the development server:
@@ -45,7 +46,6 @@ This project is built using a modern full-stack architecture:
 4. For production builds:
    ```bash
    npm run build
-   npm run start
    ```
 
 ## Usage
