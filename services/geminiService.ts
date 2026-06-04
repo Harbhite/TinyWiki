@@ -54,7 +54,6 @@ const parseGeminiResponse = (text: string | undefined): WikiData => {
   if (!text) throw new Error("No response received from the AI.");
   
   let cleanText = text.trim();
-  cleanText = cleanText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   const firstBrace = cleanText.indexOf('{');
   const lastBrace = cleanText.lastIndexOf('}');
   
