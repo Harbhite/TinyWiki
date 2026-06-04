@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FileData } from '../types';
-import { initAuth, googleSignIn, getAccessToken, logout } from '../services/firebaseAuth';
-import { fetchGoogleDocText, extractDocIdFromUrl } from '../services/googleDocsService';
-import { User } from 'firebase/auth';
 
 interface HeroSectionProps {
   onFilesSelected: (files: FileData[]) => void;
@@ -12,73 +9,6 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTopicSelected }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [topic, setTopic] = useState('');
-  
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [docUrl, setDocUrl] = useState('');
-  const [isFetchingDoc, setIsFetchingDoc] = useState(false);
-  const [showDocsInput, setShowDocsInput] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = initAuth(
-      (user, token) => setUser(user),
-      () => setUser(null)
-    );
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        setUser(result.user);
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
-      alert('Failed to sign in. Please try again.');
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleDocSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!docUrl.trim()) return;
-
-    const docId = extractDocIdFromUrl(docUrl.trim());
-    if (!docId) {
-      alert("Invalid Google Docs URL. Please paste a full document URL.");
-      return;
-    }
-
-    if (!user) {
-      await handleLogin();
-      return; // Will need user to click again or we can proceed if auth succeeds
-    }
-
-    setIsFetchingDoc(true);
-    try {
-      const token = await getAccessToken();
-      if (!token) throw new Error("No access token available. Please sign in again.");
-      
-      const doc = await fetchGoogleDocText(docId, token);
-      
-      // Convert to a FileData object
-      const base64Data = btoa(unescape(encodeURIComponent(doc.text)));
-      
-      onFilesSelected([{
-        name: doc.title + '.txt',
-        type: 'text/plain',
-        data: `data:text/plain;base64,${base64Data}`
-      }]);
-    } catch (error: any) {
-      console.error(error);
-      alert(error.message || "Failed to fetch document. Check permissions.");
-    } finally {
-      setIsFetchingDoc(false);
-    }
-  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -222,61 +152,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFilesSelected, onTop
             </label>
           </div>
         </div>
-
-        {/* Google Docs Integration */}
-        {showDocsInput ? (
-          <div className="bg-white rounded-[2rem] shadow-soft p-8 text-center animate-in fade-in slide-in-from-top-4">
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="font-serif text-2xl text-earth-brown flex items-center justify-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-                    <path fill="#4285F4" d="M29.5 4H10C8.3 4 7 5.3 7 7v34c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V16l-11.5-12z"/>
-                    <path fill="#8AB4F8" d="M29.5 4v12H41"/>
-                    <path fill="#E8EAF6" d="M15 25h18v3H15zm0-6h18v3H15zm0 12h14v3H15z"/>
-                  </svg>
-                  Import from Google Docs
-                </h3>
-                <button onClick={() => setShowDocsInput(false)} className="text-gray-400 hover:text-earth-brown">
-                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-             </div>
-             <form onSubmit={handleDocSubmit} className="space-y-6">
-               <input 
-                  type="text" 
-                  value={docUrl}
-                  onChange={(e) => setDocUrl(e.target.value)}
-                  placeholder="Paste your Google Doc URL here..."
-                  className="w-full bg-beige-bg border border-[#E5E0D8] rounded-xl px-6 py-4 text-earth-brown focus:outline-none focus:border-terracotta transition-all"
-               />
-               <button 
-                  type="submit"
-                  disabled={!docUrl.trim() || isFetchingDoc}
-                  className="w-full bg-[#4285F4] text-white py-4 rounded-xl font-medium shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-               >
-                 {isFetchingDoc ? 'Analyzing Document...' : user ? 'Import Document' : 'Sign in with Google to Import'}
-               </button>
-               {user && (
-                  <p className="text-xs text-gray-400 flex items-center justify-center gap-2">
-                    Signed in as {user.displayName} 
-                    <button type="button" onClick={logout} className="underline hover:text-earth-brown">Sign out</button>
-                  </p>
-               )}
-             </form>
-          </div>
-        ) : (
-          <button 
-             onClick={() => setShowDocsInput(true)}
-             className="w-full bg-white border border-[#E5E0D8] rounded-xl py-4 flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-soft hover:shadow-md text-earth-brown font-medium"
-          >
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-               <path fill="#4285F4" d="M29.5 4H10C8.3 4 7 5.3 7 7v34c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V16l-11.5-12z"/>
-               <path fill="#8AB4F8" d="M29.5 4v12H41"/>
-               <path fill="#E8EAF6" d="M15 25h18v3H15zm0-6h18v3H15zm0 12h14v3H15z"/>
-             </svg>
-             Import from Google Docs
-          </button>
-        )}
 
         {/* OR Divider */}
         <div className="flex items-center gap-4 text-earth-brown/20 font-serif italic text-xl">
