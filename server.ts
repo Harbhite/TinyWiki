@@ -69,6 +69,30 @@ const parseGeminiResponse = (text: string | undefined) => {
   }
 };
 
+const handleApiError = (error: any, defaultMsg: string) => {
+  let errorMsg = error.message || defaultMsg;
+  try {
+    const parsed = JSON.parse(error.message);
+    if (parsed.error && parsed.error.message) {
+      errorMsg = parsed.error.message;
+    }
+  } catch (e) {
+    // not JSON
+  }
+  
+  if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
+    return "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later.";
+  }
+  if (errorMsg.includes("503") || errorMsg.includes("UNAVAILABLE")) {
+    return "The AI is currently experiencing high demand. Please try again in a few moments.";
+  }
+  if (errorMsg.includes("400") && errorMsg.includes("API key not valid")) {
+    return "Your Gemini API key is invalid. Please check your settings.";
+  }
+  
+  return errorMsg;
+};
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -116,7 +140,7 @@ async function startServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         contents: {
           role: 'user',
           parts: [{ text: prompt }, ...fileParts]
@@ -125,7 +149,6 @@ async function startServer() {
           responseMimeType: "application/json",
           responseSchema: wikiSchema,
           temperature: 0.1,
-          tools: [{ googleSearch: {} }],
         }
       });
 
@@ -133,9 +156,7 @@ async function startServer() {
       res.json(data);
     } catch (error: any) {
       console.error(error);
-      const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
-        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
-        : error.message || "Failed to generate wiki from files";
+      const msg = handleApiError(error, "Failed to generate wiki from files");
       res.status(500).json({ error: msg });
     }
   });
@@ -159,7 +180,7 @@ async function startServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         contents: {
           role: 'user',
           parts: [{ text: prompt }]
@@ -168,7 +189,6 @@ async function startServer() {
           responseMimeType: "application/json",
           responseSchema: wikiSchema,
           temperature: 0.2, 
-          tools: [{ googleSearch: {} }],
         }
       });
 
@@ -176,9 +196,7 @@ async function startServer() {
       res.json(data);
     } catch (error: any) {
       console.error(error);
-      const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
-        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
-        : error.message || "Failed to generate wiki from topic";
+      const msg = handleApiError(error, "Failed to generate wiki from topic");
       res.status(500).json({ error: msg });
     }
   });
@@ -203,7 +221,7 @@ async function startServer() {
         `;
 
       const chat = ai.chats.create({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         config: {
           systemInstruction,
           temperature: 0.7,
@@ -221,7 +239,7 @@ async function startServer() {
       const formattedChat = messages.map((m: any) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
       
       const response = await ai.models.generateContent({
-         model: 'gemini-3.5-flash',
+         model: 'gemini-2.5-flash',
          contents: `Chat History:\n${formattedChat}\n\nAnswer the user's last message.`,
          config: {
            systemInstruction,
@@ -232,9 +250,7 @@ async function startServer() {
       res.json({ text: response.text });
     } catch (error: any) {
        console.error(error);
-       const msg = error.status === 429 || error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")
-        ? "You have exceeded your Gemini API usage quota. Please check your API key billing details or try again later."
-        : error.message || "Failed to get chat response";
+       const msg = handleApiError(error, "Failed to get chat response");
        res.status(500).json({ error: msg });
     }
   });
