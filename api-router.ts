@@ -38,9 +38,21 @@ const wikiSchema = {
       type: Type.ARRAY,
       items: { type: Type.STRING },
       description: "Directly related topics for further study."
+    },
+    glossary: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          term: { type: Type.STRING, description: "The core terminology." },
+          definition: { type: Type.STRING, description: "A short, perfectly clear explanation/definition of the term." }
+        },
+        required: ["term", "definition"]
+      },
+      description: "A list of important terminologies used in the wiki and their short, well-explained definitions."
     }
   },
-  required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics"]
+  required: ["title", "summary", "sections", "readingTimeMinutes", "relatedTopics", "glossary"]
 };
 
 const parseGeminiResponse = (text: string | undefined) => {
@@ -136,6 +148,7 @@ apiRouter.post("/generate-wiki-files", async (req: Request, res: Response) => {
       3. SIMPLIFIED PROSE: Use plain, easy-to-understand words. Avoid jargon where a simple word suffices.
       4. CONCISE SENTENCES: Keep sentences short and direct. No fluff or flowery introductions.
       5. FORMATTING: Use clean Markdown. Bold (**term**) core concepts.
+      6. GLOSSARY: Provide a glossary of all the bolded core concepts, explaining terminologies shortly and well.
       
       Return ONLY raw JSON according to the schema.
     `;
@@ -175,7 +188,8 @@ apiRouter.post("/generate-wiki-topic", async (req: Request, res: Response) => {
       1. FACTUAL DEPTH: Provide a massive amount of detail. 5-7 long paragraphs per section.
       2. NO ANALOGIES: Strictly avoid metaphors or analogies. Stick to direct, literal explanations.
       3. SIMPLE LANGUAGE: Explain complex parts using the simplest factual language possible.
-      4. NEAT FORMATTING: Use headings and bolding for readability.
+      4. NEAT FORMATTING: Use headings and bolding (**term**) for readability.
+      5. GLOSSARY: Provide a glossary of all the bolded core concepts, explaining terminologies shortly and well.
       
       If it's a YouTube URL, extract meaningful conclusions, summarize the video into a rich, structured textual wiki guide.
       Return ONLY raw JSON according to the schema.

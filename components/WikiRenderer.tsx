@@ -71,31 +71,13 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
 
   const glossaryMap = useMemo(() => {
     const map = new Map<string, string>();
-    if (!data || !data.sections) return map;
-    
-    data.sections.forEach(section => {
-        if (!section.content) return;
-        const regex = /\*\*([^*]+)\*\*/g;
-        let match;
-        while ((match = regex.exec(section.content)) !== null) {
-            const term = match[1].trim();
-            if (term.length < 2 || !isNaN(Number(term))) continue;
-            
-            const restOfText = section.content.slice(match.index! + match[0].length);
-            const defRegex = /^([:,\s—–-]+(?:is|are|refers to|means|represents)?\s*)([^.\n]+)/i;
-            const defMatch = restOfText.match(defRegex);
-            
-            if (defMatch && defMatch[2]) {
-                const definition = defMatch[2].trim();
-                // Avoid tiny or non-definition matches
-                if (definition.length > 5) {
-                   map.set(term, definition);
-                }
-            } else if (!map.has(term)) {
-                map.set(term, "Essential concept defined within the context of this synthesis.");
-            }
-        }
-    });
+    if (data.glossary) {
+      data.glossary.forEach(item => {
+        map.set(item.term, item.definition);
+        // also map the lowercase version for case-insensitive matching
+        map.set(item.term.toLowerCase(), item.definition);
+      });
+    }
     return map;
   }, [data]);
 
@@ -149,8 +131,10 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     const parts = content.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        const term = part.slice(2, -2);
-        return <GlossaryTerm key={index} term={term} definition={glossaryMap.get(term)} />;
+        const term = part.slice(2, -2).trim();
+        // Fallback to lowercase mapping if exact match is not found
+        const definition = glossaryMap.get(term) || glossaryMap.get(term.toLowerCase());
+        return <GlossaryTerm key={index} term={term} definition={definition} />;
       }
       return part;
     });
@@ -176,7 +160,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
     }
   };
 
-  const glossaryItems = Array.from(glossaryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const glossaryItems = data.glossary ? [...data.glossary].sort((a, b) => a.term.localeCompare(b.term)) : [];
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col md:flex-row">
@@ -312,7 +296,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                       {section.keyPoints?.map((point, kIdx) => (
                         <li key={kIdx} className="flex gap-4 text-sm text-earth-brown/60 leading-relaxed font-light">
                           <span className="text-terracotta/40 font-serif italic text-lg leading-none shrink-0">#</span>
-                          {point}
+                          <div>{formatContent(point)}</div>
                         </li>
                       ))}
                     </ul>
@@ -344,14 +328,14 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                <h2 className="font-serif text-5xl text-earth-brown mb-12 tracking-tight">Glossary</h2>
                
                <div className="space-y-10">
-                 {glossaryItems.map(([term, definition], idx) => (
+                 {glossaryItems.map((item, idx) => (
                    <div key={idx} className="group border-b border-gray-100 pb-8 last:border-0">
                      <dt className="text-xl font-bold text-earth-brown mb-2 group-hover:text-terracotta transition-colors flex items-center gap-3">
                        <span className="w-2 h-2 bg-terracotta rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                       {term}
+                       {item.term}
                      </dt>
                      <dd className="text-earth-brown/60 font-light leading-relaxed text-sm pl-5">
-                       {definition}
+                       {item.definition}
                      </dd>
                    </div>
                  ))}

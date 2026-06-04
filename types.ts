@@ -5,12 +5,18 @@ export interface WikiSection {
   citations: string[];
 }
 
+export interface WikiGlossaryItem {
+  term: string;
+  definition: string;
+}
+
 export interface WikiData {
   title: string;
   summary: string;
   readingTimeMinutes: number;
   sections: WikiSection[];
   relatedTopics: string[];
+  glossary?: WikiGlossaryItem[];
 }
 
 export interface FileData {
