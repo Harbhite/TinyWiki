@@ -89,7 +89,7 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       contents: {
         role: 'user',
         parts: [{ text: prompt }, ...fileParts]
@@ -98,7 +98,6 @@ export const generateWikiFromFiles = async (files: FileData[]): Promise<WikiData
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
         temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 0 }
       }
     });
 
@@ -126,7 +125,7 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.5-flash',
       contents: {
         role: 'user',
         parts: [{ text: prompt }]
@@ -135,7 +134,6 @@ export const generateWikiFromTopic = async (topic: string): Promise<WikiData> =>
         responseMimeType: "application/json",
         responseSchema: wikiSchema,
         temperature: 0.2,
-        thinkingConfig: { thinkingBudget: 0 }
       }
     });
 
