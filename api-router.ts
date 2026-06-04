@@ -47,6 +47,7 @@ const parseGeminiResponse = (text: string | undefined) => {
   if (!text) throw new Error("No response received from the AI.");
   
   let cleanText = text.trim();
+  cleanText = cleanText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
   
   if (cleanText.startsWith('```json')) {
     cleanText = cleanText.substring(7);
@@ -141,7 +142,7 @@ apiRouter.post("/generate-wiki-files", async (req: Request, res: Response) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: {
         role: 'user',
         parts: [{ text: prompt }, ...fileParts]
@@ -182,7 +183,7 @@ apiRouter.post("/generate-wiki-topic", async (req: Request, res: Response) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       contents: {
         role: 'user',
         parts: [{ text: prompt }]
@@ -227,7 +228,7 @@ apiRouter.post("/chat", async (req: Request, res: Response) => {
     const formattedChat = messages.map((m: any) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
     
     const response = await ai.models.generateContent({
-       model: 'gemini-2.5-flash',
+       model: 'gemini-3-flash-preview',
        contents: `Chat History:\n${formattedChat}\n\nAnswer the user's last message.`,
        config: {
          systemInstruction,
