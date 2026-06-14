@@ -1,9 +1,21 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { WikiData } from '../types';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { WikiData, Annotation } from '../types';
 import { Button } from './Button';
-import { chatWithWiki, exportWikiAsMarkdown } from '../services/geminiService';
+import { chatWithWiki, exportWikiAsMarkdown, getEli5Explanation } from '../services/geminiService';
 import { Flashcards } from './Flashcards';
 import { ReadingProgressBar } from './ReadingProgressBar';
+import { CognitivePersonalization } from './CognitivePersonalization';
+import { DevilsAdvocate } from './DevilsAdvocate';
+import { Eli5Tooltip } from './Eli5Tooltip';
+import { ConceptMap } from './ConceptMap';
+import { AudioBriefing } from './AudioBriefing';
+import { SocraticQA } from './SocraticQA';
+import { LiveResources } from './LiveResources';
+import { CodeSandbox } from './CodeSandbox';
+import { Infographics } from './Infographics';
+import { Annotations } from './Annotations';
+import { KnowledgeFusion } from './KnowledgeFusion';
+import { TimeTravelContext } from './TimeTravelContext';
 
 // Tooltip component for glossary terms highlighted inline in content
 const GlossaryTerm: React.FC<{ term: string; definition?: string }> = ({ term, definition }) => {
@@ -56,9 +68,19 @@ interface WikiRendererProps {
   data: WikiData;
   onReset: () => void;
   onTopicSelect: (topic: string) => void;
+  library?: Array<{ id: string; data: WikiData }>;
+  onWikiUpdate?: (wiki: WikiData) => void;
+  onLoading?: (isLoading: boolean) => void;
 }
 
-export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTopicSelect }) => {
+export const WikiRenderer: React.FC<WikiRendererProps> = ({
+  data,
+  onReset,
+  onTopicSelect,
+  library = [],
+  onWikiUpdate,
+  onLoading,
+}) => {
   const [activeSection, setActiveSection] = useState<number | string>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [exportFeedback, setExportFeedback] = useState(false);
@@ -75,6 +97,18 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
 
   // Feature 4: Flashcards state
   const [showFlashcards, setShowFlashcards] = useState(false);
+
+  // Feature 2: Concept Map state
+  const [showConceptMap, setShowConceptMap] = useState(false);
+
+  // Feature 5: Socratic Q&A state
+  const [showSocraticQA, setShowSocraticQA] = useState(false);
+
+  // Feature 9: Knowledge Fusion state
+  const [showKnowledgeFusion, setShowKnowledgeFusion] = useState(false);
+
+  // Feature 10: Annotations state
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
   useEffect(() => {
     setActiveSection(0);
@@ -215,8 +249,43 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
         <Flashcards glossary={glossaryItems} onClose={() => setShowFlashcards(false)} />
       )}
 
+      {/* Feature 2: Concept Map modal */}
+      {showConceptMap && data.conceptMapNodes && (
+        <ConceptMap
+          nodes={data.conceptMapNodes}
+          edges={data.conceptMapEdges || []}
+          onNodeClick={(nodeId) => {
+            const node = data.conceptMapNodes?.find((n) => n.id === nodeId);
+            if (node && node.wikiSectionId !== undefined) {
+              handleScrollToSection(node.wikiSectionId);
+            }
+            setShowConceptMap(false);
+          }}
+          onClose={() => setShowConceptMap(false)}
+        />
+      )}
+
+      {/* Feature 5: Socratic Q&A modal */}
+      {showSocraticQA && (
+        <SocraticQA wiki={data} onClose={() => setShowSocraticQA(false)} />
+      )}
+
+      {/* Feature 9: Knowledge Fusion modal */}
+      {showKnowledgeFusion && (
+        <KnowledgeFusion
+          library={library}
+          onFusionComplete={(fusedWiki) => {
+            if (onWikiUpdate) {
+              onWikiUpdate(fusedWiki);
+            }
+            setShowKnowledgeFusion(false);
+          }}
+          onClose={() => setShowKnowledgeFusion(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-full md:w-72 md:sticky md:top-0 md:h-screen border-r border-gray-100 p-8 flex flex-col bg-white print:hidden">
+      <aside className="w-full md:w-72 md:sticky md:top-0 md:h-screen border-r border-gray-100 p-8 flex flex-col bg-white print:hidden overflow-y-auto">
         <div className="mb-10 overflow-y-auto scrollbar-hide flex-1">
           <h2 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-6">
             Contents
@@ -278,7 +347,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
             <h2 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest mb-3">
               Tools
             </h2>
-            {/* 2×3 grid: Print, Share, Chat, Export, Flashcards */}
+            {/* 3×3 grid for expanded tools */}
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => window.print()}
@@ -335,7 +404,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                 <span className="text-[9px] font-bold uppercase">{exportFeedback ? 'Saved' : 'Export'}</span>
               </button>
 
-              {/* Feature 4: Flashcards — only shown when glossary exists */}
+              {/* Feature 4: Flashcards */}
               {glossaryItems.length > 0 && (
                 <button
                   onClick={() => setShowFlashcards(true)}
@@ -346,6 +415,46 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   <span className="text-[9px] font-bold uppercase">Cards</span>
+                </button>
+              )}
+
+              {/* Feature 2: Concept Map */}
+              {data.conceptMapNodes && (
+                <button
+                  onClick={() => setShowConceptMap(true)}
+                  className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100"
+                  title="View Concept Map"
+                >
+                  <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  <span className="text-[9px] font-bold uppercase">Graph</span>
+                </button>
+              )}
+
+              {/* Feature 5: Socratic Q&A */}
+              <button
+                onClick={() => setShowSocraticQA(true)}
+                className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100"
+                title="Test Your Knowledge"
+              >
+                <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-[9px] font-bold uppercase">Quiz</span>
+              </button>
+
+              {/* Feature 9: Knowledge Fusion */}
+              {library.length >= 2 && (
+                <button
+                  onClick={() => setShowKnowledgeFusion(true)}
+                  className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100"
+                  title="Fuse Multiple Wikis"
+                >
+                  <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="text-[9px] font-bold uppercase">Fuse</span>
                 </button>
               )}
             </div>
@@ -365,7 +474,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
 
         {/* Header / Abstract */}
         <header className="px-8 md:px-20 py-20 border-b border-gray-50 text-center">
-          <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
             <div className="inline-block bg-terracotta/5 text-terracotta text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full">
               Fact-Based Synthesis
             </div>
@@ -373,6 +482,12 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
             {difficulty && diffStyle && (
               <div className={`inline-block ${diffStyle.bg} ${diffStyle.text} text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full`}>
                 {difficulty}
+              </div>
+            )}
+            {/* Feature 1: Cognitive Level Badge */}
+            {data.cognitiveLevel && (
+              <div className="inline-block bg-soft-sage/20 text-soft-sage text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full">
+                {data.cognitiveLevel} Level
               </div>
             )}
           </div>
@@ -390,6 +505,62 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
             <span className="w-12 h-px bg-gray-100"></span>
           </div>
         </header>
+
+        {/* Feature 1: Cognitive Personalization Panel */}
+        {onWikiUpdate && onLoading && (
+          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+            <CognitivePersonalization
+              currentWiki={data}
+              onWikiUpdate={onWikiUpdate}
+              onLoading={onLoading}
+            />
+          </div>
+        )}
+
+        {/* Feature 4: Audio Briefing Panel */}
+        {data.summary && (
+          <div className="px-8 md:px-20 py-12 bg-white border-b border-gray-50">
+            <AudioBriefing wiki={data} />
+          </div>
+        )}
+
+        {/* Feature 6: Live Resources Panel */}
+        {data.liveResources && data.liveResources.length > 0 && (
+          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+            <LiveResources resources={data.liveResources} />
+          </div>
+        )}
+
+        {/* Feature 7: Code & Math Sandboxes */}
+        {(data.codeSnippets?.length || 0) > 0 || (data.mathExpressions?.length || 0) > 0 && (
+          <div className="px-8 md:px-20 py-12 bg-white border-b border-gray-50">
+            <CodeSandbox
+              snippets={data.codeSnippets || []}
+              mathExpressions={data.mathExpressions || []}
+            />
+          </div>
+        )}
+
+        {/* Feature 11: Infographics Panel */}
+        {data.sections && (
+          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+            <Infographics wiki={data} />
+          </div>
+        )}
+
+        {/* Feature 12: Time-Travel Historical Context */}
+        {data.historicalContexts && data.historicalContexts.length > 0 && (
+          <div className="px-8 md:px-20 py-12 bg-white border-b border-gray-50">
+            <TimeTravelContext
+              currentWiki={data}
+              historicalContexts={data.historicalContexts}
+              onContextSelect={(context) => {
+                // Handle historical context selection
+                console.log('Selected historical context:', context.year);
+              }}
+            />
+          </div>
+        )}
 
         {/* Sections */}
         <div className="divide-y divide-gray-50">
@@ -426,6 +597,9 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                 <div className="prose prose-lg prose-p:text-earth-brown/70 prose-p:leading-[1.8] prose-p:font-light max-w-none whitespace-pre-wrap selection:bg-soft-yellow/50">
                   {formatContent(section.content || '')}
                 </div>
+
+                {/* Feature 3: Devil's Advocate Critical Perspectives */}
+                <DevilsAdvocate section={section} sectionNumber={idx} />
 
                 {/* Key Points + Citations */}
                 <div className="grid md:grid-cols-5 gap-6 mt-12">
@@ -487,6 +661,31 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({ data, onReset, onTop
                 ))}
               </div>
             </div>
+          </article>
+        )}
+
+        {/* Feature 10: Annotations Panel */}
+        {annotations.length > 0 && (
+          <article className="px-8 md:px-20 py-24 bg-white">
+            <Annotations
+              annotations={annotations}
+              onAddAnnotation={(ann) => setAnnotations([...annotations, ann])}
+              onDeleteAnnotation={(id) => setAnnotations(annotations.filter((a) => a.id !== id))}
+              onExportAnnotations={() => {
+                const markdown = annotations
+                  .map((a) => `**${a.text}**\n\n${a.note}`)
+                  .join('\n\n---\n\n');
+                const blob = new Blob([markdown], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${data.title}_annotations.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+            />
           </article>
         )}
 

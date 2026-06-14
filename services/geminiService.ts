@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { FileData, WikiData } from "../types";
+import { FileData, WikiData, WikiSection } from "../types";
 
 // NOTE: The Gemini API key is used client-side. Restrict it to specific
 // domains in the Google Cloud Console for production deployments.
@@ -42,11 +42,15 @@ const wikiSchema = {
       type: Type.NUMBER,
       description: "Calculated reading time in minutes.",
     },
-    // Feature 5: Difficulty badge — AI assigns one of three levels
     difficulty: {
       type: Type.STRING,
       description:
         "Estimated difficulty level of the topic for a general audience. Must be exactly one of: 'Beginner', 'Intermediate', or 'Advanced'.",
+    },
+    cognitiveLevel: {
+      type: Type.STRING,
+      description:
+        "The cognitive level of the generated content. Must be exactly one of: 'Basic', 'Standard', or 'Advanced'.",
     },
     sections: {
       type: Type.ARRAY,
@@ -71,6 +75,12 @@ const wikiSchema = {
             type: Type.ARRAY,
             items: { type: Type.STRING },
             description: "Source markers (e.g., 'Page 4', 'Slide 7').",
+          },
+          criticalPerspectives: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description:
+              "Optional: 2-3 critical perspectives, counter-arguments, or alternative theories related to this section. If none, return an empty array.",
           },
         },
         required: ["heading", "content", "keyPoints", "citations"],
@@ -108,6 +118,7 @@ const wikiSchema = {
     "sections",
     "readingTimeMinutes",
     "difficulty",
+    "cognitiveLevel",
     "relatedTopics",
     "glossary",
   ],
@@ -181,7 +192,8 @@ const handleApiError = (error: any, defaultMsg: string): never => {
 };
 
 export const generateWikiFromFiles = async (
-  files: FileData[]
+  files: FileData[],
+  cognitiveLevel: WikiData["cognitiveLevel"] = "Standard"
 ): Promise<WikiData> => {
   try {
     const ai = getAi();
@@ -196,6 +208,8 @@ export const generateWikiFromFiles = async (
       5. FORMATTING: Use clean Markdown. Bold (**term**) core concepts.
       6. GLOSSARY: Provide a glossary of all the bolded core concepts, explaining terminologies shortly and well.
       7. DIFFICULTY: Assess the overall difficulty of the topic as 'Beginner', 'Intermediate', or 'Advanced'.
+      8. COGNITIVE LEVEL: Adjust the language, depth, and complexity for a ${cognitiveLevel} audience.
+      9. CRITICAL PERSPECTIVES: For each section, include 2-3 critical perspectives, counter-arguments, or alternative theories if applicable. If none, return an empty array.
       Return ONLY raw JSON according to the schema.
     `;
     const fileParts = files.map(processFile);
@@ -220,7 +234,8 @@ export const generateWikiFromFiles = async (
 };
 
 export const generateWikiFromTopic = async (
-  topic: string
+  topic: string,
+  cognitiveLevel: WikiData["cognitiveLevel"] = "Standard"
 ): Promise<WikiData> => {
   try {
     const ai = getAi();
@@ -234,6 +249,8 @@ export const generateWikiFromTopic = async (
       4. NEAT FORMATTING: Use headings and bolding (**term**) for readability.
       5. GLOSSARY: Provide a glossary of all the bolded core concepts, explaining terminologies shortly and well.
       6. DIFFICULTY: Assess the overall difficulty of the topic as 'Beginner', 'Intermediate', or 'Advanced'.
+      7. COGNITIVE LEVEL: Adjust the language, depth, and complexity for a ${cognitiveLevel} audience.
+      8. CRITICAL PERSPECTIVES: For each section, include 2-3 critical perspectives, counter-arguments, or alternative theories if applicable. If none, return an empty array.
       If it's a YouTube URL, extract meaningful conclusions, summarize the video into a rich, structured textual wiki guide.
       Return ONLY raw JSON according to the schema.
     `;
@@ -313,6 +330,34 @@ ${compactContext}
   }
 };
 
+// Feature 8: ELI5 Explanations
+export const getEli5Explanation = async (
+  term: string,
+  context: string
+): Promise<string> => {
+  try {
+    const ai = getAi();
+    const prompt = `Explain the term "${term}" in the simplest possible terms, as if explaining to a 5-year-old. Keep it very short and direct, one or two sentences at most. Use the following context for your explanation if relevant:
+
+Context: ${context}
+
+ELI5 Explanation:`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        temperature: 0.5,
+      },
+    });
+    return response.text ?? "Could not generate an ELI5 explanation.";
+  } catch (error: any) {
+    console.error(error);
+    handleApiError(error, "Failed to get ELI5 explanation.");
+    throw error;
+  }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Feature 1: Markdown Export
 // Converts a WikiData object into a well-formatted Markdown document and
@@ -322,82 +367,95 @@ export const exportWikiAsMarkdown = (data: WikiData): void => {
   const lines: string[] = [];
 
   lines.push(`# ${data.title}`);
-  lines.push('');
+  lines.push("");
 
   if (data.difficulty) {
-    lines.push(`> **Difficulty:** ${data.difficulty} &nbsp;|&nbsp; **Reading Time:** ${data.readingTimeMinutes} min`);
-    lines.push('');
+    lines.push(
+      `> **Difficulty:** ${data.difficulty} &nbsp;|&nbsp; **Reading Time:** ${data.readingTimeMinutes} min`
+    );
+    lines.push("");
   } else {
     lines.push(`> **Reading Time:** ${data.readingTimeMinutes} min`);
-    lines.push('');
+    lines.push("");
   }
 
-  lines.push('## Summary');
-  lines.push('');
+  lines.push("## Summary");
+  lines.push("");
   lines.push(data.summary);
-  lines.push('');
-  lines.push('---');
-  lines.push('');
+  lines.push("");
+  lines.push("---");
+  lines.push("");
 
   data.sections.forEach((section, idx) => {
-    lines.push(`## ${String(idx + 1).padStart(2, '0')}. ${section.heading}`);
-    lines.push('');
+    lines.push(`## ${String(idx + 1).padStart(2, "0")}. ${section.heading}`);
+    lines.push("");
     lines.push(section.content);
-    lines.push('');
+    lines.push("");
 
     if (section.keyPoints && section.keyPoints.length > 0) {
-      lines.push('### Key Points');
-      lines.push('');
+      lines.push("### Key Points");
+      lines.push("");
       section.keyPoints.forEach((point) => {
         lines.push(`- ${point}`);
       });
-      lines.push('');
+      lines.push("");
+    }
+
+    if (section.criticalPerspectives && section.criticalPerspectives.length > 0) {
+      lines.push("### Critical Perspectives");
+      lines.push("");
+      section.criticalPerspectives.forEach((perspective) => {
+        lines.push(`- ${perspective}`);
+      });
+      lines.push("");
     }
 
     if (section.citations && section.citations.length > 0) {
-      lines.push('### Sources');
-      lines.push('');
+      lines.push("### Sources");
+      lines.push("");
       section.citations.forEach((cite) => {
         lines.push(`- ${cite}`);
       });
-      lines.push('');
+      lines.push("");
     }
 
-    lines.push('---');
-    lines.push('');
+    lines.push("---");
+    lines.push("");
   });
 
   if (data.glossary && data.glossary.length > 0) {
-    lines.push('## Glossary');
-    lines.push('');
-    const sorted = [...data.glossary].sort((a, b) => a.term.localeCompare(b.term));
+    lines.push("## Glossary");
+    lines.push("");
+    const sorted = [...data.glossary].sort((a, b) =>
+      a.term.localeCompare(b.term)
+    );
     sorted.forEach((item) => {
       lines.push(`**${item.term}**`);
       lines.push(`  ${item.definition}`);
-      lines.push('');
+      lines.push("");
     });
-    lines.push('---');
-    lines.push('');
+    lines.push("---");
+    lines.push("");
   }
 
   if (data.relatedTopics && data.relatedTopics.length > 0) {
-    lines.push('## Related Topics');
-    lines.push('');
+    lines.push("## Related Topics");
+    lines.push("");
     data.relatedTopics.forEach((topic) => {
       lines.push(`- ${topic}`);
     });
-    lines.push('');
+    lines.push("");
   }
 
-  lines.push('---');
-  lines.push('*Generated by [TinyWiki](https://github.com/Harbhite/TinyWiki)*');
+  lines.push("---");
+  lines.push("*Generated by [TinyWiki](https://github.com/Harbhite/TinyWiki)*");
 
-  const markdown = lines.join('\n');
-  const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+  const markdown = lines.join("\n");
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
-  a.download = `${data.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+  a.download = `${data.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
