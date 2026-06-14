@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 
 export const LoadingScreen: React.FC = () => {
@@ -13,20 +12,19 @@ export const LoadingScreen: React.FC = () => {
     "Building narrative structures...",
     "Applying scholarly citations...",
     "Finalizing wiki formatting...",
-    "Almost ready for you..."
+    "Almost ready for you...",
   ];
 
   useEffect(() => {
-    // Progress simulation: fast start, slows down as it gets more complex
+    // Logarithmic easing: fast start, slows down, never quite hits 100 until done.
     const startTime = Date.now();
-    const duration = 12000; // Estimated 12s for long-form generation
 
-    const timer = setInterval(() => {
+    const progressTimer = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const rawProgress = (elapsed / duration) * 100;
-      
-      // Logarithmic-style easing to never quite hit 100 until finished
-      const easedProgress = Math.min(99, Math.floor(100 * (1 - Math.exp(-elapsed / 4000))));
+      const easedProgress = Math.min(
+        99,
+        Math.floor(100 * (1 - Math.exp(-elapsed / 4000)))
+      );
       setProgress(easedProgress);
     }, 100);
 
@@ -39,7 +37,7 @@ export const LoadingScreen: React.FC = () => {
     }, 2500);
 
     return () => {
-      clearInterval(timer);
+      clearInterval(progressTimer);
       clearInterval(messageTimer);
     };
   }, [messages.length]);
@@ -52,7 +50,7 @@ export const LoadingScreen: React.FC = () => {
   return (
     <div className="fixed inset-0 bg-beige-bg flex flex-col items-center justify-center z-50 px-6">
       <div className="bg-white p-10 md:p-14 rounded-[3rem] shadow-2xl max-w-lg w-full text-center relative overflow-hidden border border-earth-brown/5">
-        
+
         {/* Skeleton Stencil Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none">
           <div className="grid grid-cols-12 gap-4 p-8">
@@ -92,7 +90,7 @@ export const LoadingScreen: React.FC = () => {
               className="text-terracotta"
             />
           </svg>
-          
+
           {/* Centered Content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="mb-1 text-terracotta animate-bounce-slow">
@@ -104,12 +102,12 @@ export const LoadingScreen: React.FC = () => {
             <span className="text-[10px] font-bold text-earth-brown/30 uppercase tracking-[0.2em] mt-2">Processing</span>
           </div>
         </div>
-        
+
         {/* Animated Message Area */}
         <div className="space-y-4 relative z-10">
           <h2 className="font-serif text-3xl text-earth-brown tracking-tight">Crafting Your Wiki</h2>
           <div className="h-8 flex items-center justify-center">
-            <p 
+            <p
               className={`text-earth-brown/60 font-medium transition-all duration-500 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
             >
               {messages[messageIndex]}
@@ -120,7 +118,7 @@ export const LoadingScreen: React.FC = () => {
         {/* Reassuring Footer */}
         <div className="mt-12 pt-8 border-t border-earth-brown/5">
           <p className="text-[11px] text-earth-brown/30 font-bold uppercase tracking-widest">
-            Gemini 3 Flash &bull; High Precision Mode
+            Gemini 2.5 Flash &bull; High Precision Mode
           </p>
         </div>
       </div>

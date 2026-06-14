@@ -14,6 +14,7 @@ export interface WikiData {
   title: string;
   summary: string;
   readingTimeMinutes: number;
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
   sections: WikiSection[];
   relatedTopics: string[];
   glossary?: WikiGlossaryItem[];

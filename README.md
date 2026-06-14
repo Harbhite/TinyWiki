@@ -1,59 +1,78 @@
 # TinyWiki
 
-TinyWiki is a full-stack, AI-powered application that generates exhaustive, structured, and beautifully formatted Wikipedia-style articles from a topic, YouTube video URL, or uploaded files. It uses the Gemini 2.5 Flash API to process information and synthesize complex concepts into manageable, easy-to-read knowledge bases, complete with a glossary, key points, and a built-in AI study assistant.
+TinyWiki is an AI-powered application that generates exhaustive, structured, and beautifully formatted Wikipedia-style articles from a topic, YouTube video URL, or uploaded files. It uses the Gemini 2.5 Flash API to process information and synthesise complex concepts into manageable, easy-to-read knowledge bases — complete with a glossary, key points, and a built-in AI study assistant.
 
 ## Features
 
-- **Topic or File to Wiki**: Enter a topic, paste a YouTube link, or upload documents (PDF, DOCX, TXT) to generate a comprehensive wiki.
-- **Deep & Exhaustive Analysis**: Powered by Gemini 2.5 Flash, the generated content is incredibly detailed while maintaining a plain and simplified language.
-- **Auto-Generated Glossary**: Automatically detects and extracts core terminologies, providing a dedicated glossary section with clear definitions.
-- **Built-in AI Study Assistant**: Chat directly with your generated wiki context. Ask questions, request summaries, or clarify specific points from the information provided.
-- **Structured Sections**: Content is broken down into easily readable sections with main headings, detailed explanations, key takeaways, and source citations.
-- **Clean Aesthetic**: A beautiful, minimal, and premium UI crafted with Tailwind CSS (`Cosmic Slate Theme` paired with earthy tones and serif typography).
+- **Topic or File to Wiki** — Enter a topic, paste a YouTube link, or upload documents (PDF, DOCX, PPTX, TXT, images) to generate a comprehensive wiki.
+- **Deep & Exhaustive Analysis** — Powered by Gemini 2.5 Flash; content is detailed while maintaining plain, simplified language.
+- **Auto-Generated Glossary** — Automatically detects and extracts core terminologies, providing a dedicated glossary section with inline hover tooltips.
+- **Built-in AI Study Assistant** — Chat directly with your generated wiki. Ask questions, request summaries, or clarify specific points.
+- **Structured Sections** — Content is broken into readable sections with headings, detailed explanations, key takeaways, and source citations.
+- **History / Library** — All generated wikis are saved locally and searchable from the Library page.
+- **Share Links** — Copy a shareable URL that encodes the full wiki for others to view instantly.
+- **Read Aloud (TTS)** — Listen to any section using the browser's built-in speech synthesis.
+- **Print Support** — Clean print stylesheet for offline reading.
+- **Clean Aesthetic** — Minimal, premium UI built with Tailwind CSS, DM Serif Display, and Inter typography.
 
 ## Architecture
 
-This project is built using a modern frontend architecture:
+This project is a pure **client-side** React application:
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React (for icons)
-- **AI Integration**: `@google/genai` TypeScript SDK (Gemini 2.5 Flash) running client-side
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, Vite, Tailwind CSS (CDN) |
+| AI Integration | `@google/genai` SDK (Gemini 2.5 Flash) — runs in the browser |
+| Persistence | `localStorage` (no backend required) |
+| Icons | Inline SVG (no icon library dependency) |
 
-> **Warning**: This architecture currently initializes the Gemini API in the browser. For production deployments on Vercel or similar platforms, you should ensure your API key has appropriate domain restrictions or move the implementation to a backend/serverless function.
+> **Security Note:** The Gemini API key is used client-side. For production deployments, restrict the key to specific domains in the [Google Cloud Console](https://console.cloud.google.com/) or proxy requests through a backend/serverless function.
 
 ## Setup and Installation
 
 ### Prerequisites
-- Node.js (v18+)
-- A Google Gemini API Key
+
+- Node.js v18+
+- A Google Gemini API Key ([get one free](https://aistudio.google.com/apikey))
 
 ### Installation
 
-1. Install dependencies:
+1. Clone the repository and install dependencies:
    ```bash
+   git clone https://github.com/Harbhite/TinyWiki.git
+   cd TinyWiki
    npm install
    ```
 
-2. Create a `.env` file in the root of your project and add your Gemini API Key using the `VITE_` prefix:
+2. Create a `.env` file from the example:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Add your Gemini API key to `.env`:
    ```env
    VITE_GEMINI_API_KEY=your_gemini_api_key_here
    ```
 
-3. Run the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-4. For production builds:
+5. For production builds:
    ```bash
    npm run build
+   npm run start
    ```
 
 ## Usage
 
-1. Open the application in your browser.
-2. Under "Create New Wiki", enter a topic, a subject area, or a YouTube URL. Or, drag and drop support documents to base the wiki on.
-3. Click "Generate Wiki" (or let it process uploaded files).
-4. Browse the generated wiki, review the glossary, and interact with the AI assistant through the chat tab for any questions regarding the article. 
+1. Open the application in your browser (default: `http://localhost:3000`).
+2. Enter a topic, a subject area, or a YouTube URL — **or** drag and drop a document.
+3. Click **Generate** and wait for the wiki to be crafted.
+4. Browse the generated wiki, explore the glossary, and use the **QA Chat** button to ask questions about the article.
+5. Use **Share** to copy a link, **Print** to save a PDF, or visit the **Library** to revisit past wikis.
 
 ## License
+
 MIT

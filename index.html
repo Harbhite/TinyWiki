@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="TinyWiki — Transform any topic, YouTube video, or document into a beautiful, structured, AI-powered wiki in seconds." />
     <title>TinyWiki - Organic Learning</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -49,13 +51,25 @@
     <style>
       html {
         scroll-behavior: smooth;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
       body {
         background-color: #FDFCF8;
         color: #272320;
         -webkit-font-smoothing: antialiased;
       }
-      
+
+      /* Dark mode overrides */
+      html.dark body { background-color: #1a1410 !important; color: #e8ddd5 !important; }
+      html.dark .bg-beige-bg { background-color: #1a1410 !important; }
+      html.dark .bg-white { background-color: #2a2018 !important; color: #e8ddd5; }
+      html.dark .bg-\[\#FAFAFA\], html.dark .bg-\[\#FCFCFC\] { background-color: #221a12 !important; }
+      html.dark .border-gray-100, html.dark .border-gray-200 { border-color: #3a2e24 !important; }
+      html.dark .text-earth-brown { color: #e8ddd5 !important; }
+      html.dark .bg-gray-50, html.dark .bg-gray-100 { background-color: #2e2218 !important; }
+      html.dark .text-gray-400, html.dark .text-gray-500 { color: #9a8880 !important; }
+      html.dark .text-gray-300 { color: #6a5e58 !important; }
+
       .scrollbar-hide::-webkit-scrollbar {
           display: none;
       }
@@ -85,21 +99,9 @@
         .no-break { break-inside: avoid; }
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+  </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="index.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

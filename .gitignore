@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Firebase config (contains API keys — keep out of version control)
+firebase-applet-config.json
+
+# Dev test scripts
+test.ts
+test.js

@@ -2,5 +2,5 @@
   "name": "TinyWiki",
   "description": "Transform your documents into simplified, beautiful, and explained Wiki-style pages using Gemini AI.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": ["MAJOR_CAPABILITY_CLIENT_SIDE_GEMINI_API"]
 }
