@@ -23,7 +23,7 @@ const GlossaryTerm: React.FC<{ term: string; definition?: string }> = ({ term, d
 
   return (
     <span
-      className="relative inline-block group z-10"
+      className="relative inline-block group z-10 cursor-pointer"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onClick={(e) => {
@@ -38,7 +38,7 @@ const GlossaryTerm: React.FC<{ term: string; definition?: string }> = ({ term, d
       {/* Tooltip */}
       <div
         className={`
-          absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-72 md:w-80 p-4
+          fixed sm:absolute bottom-auto sm:bottom-full left-1/2 -translate-x-1/2 mb-0 sm:mb-4 w-64 sm:w-72 md:w-80 p-3 sm:p-4 mt-2 sm:mt-0 sm:top-auto top-1/2 sm:top-auto
           bg-earth-brown text-white rounded-xl shadow-2xl
           text-xs leading-relaxed font-sans
           transition-all duration-300 pointer-events-none transform origin-bottom
@@ -408,7 +408,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
               {glossaryItems.length > 0 && (
                 <button
                   onClick={() => setShowFlashcards(true)}
-                  className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100"
+                  className="flex flex-col items-center justify-center p-3 sm:p-2 bg-gray-50 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-colors text-gray-400 hover:text-earth-brown border border-gray-100 active:scale-95"
                   title="Study with Flashcards"
                 >
                   <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,8 +473,8 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
       <main className="flex-1 bg-white shadow-sm ring-1 ring-gray-100 mx-auto min-h-screen">
 
         {/* Header / Abstract */}
-        <header className="px-8 md:px-20 py-20 border-b border-gray-50 text-center">
-          <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
+        <header className="px-4 sm:px-6 md:px-12 lg:px-20 py-12 sm:py-16 md:py-20 border-b border-gray-50 text-center">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 flex-wrap">
             <div className="inline-block bg-terracotta/5 text-terracotta text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full">
               Fact-Based Synthesis
             </div>
@@ -491,11 +491,11 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
               </div>
             )}
           </div>
-          <h1 className="font-serif text-5xl md:text-7xl text-earth-brown mb-10 leading-[1.1] tracking-tight">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl lg:text-7xl text-earth-brown mb-6 sm:mb-10 leading-[1.1] tracking-tight">
             {data.title}
           </h1>
           <div className="max-w-2xl mx-auto">
-            <p className="text-xl md:text-2xl leading-relaxed text-earth-brown/60 font-light italic">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed text-earth-brown/60 font-light italic">
               {data.summary}
             </p>
           </div>
@@ -508,7 +508,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
         {/* Feature 1: Cognitive Personalization Panel */}
         {onWikiUpdate && onLoading && (
-          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+          <div className="px-4 sm:px-6 md:px-12 lg:px-20 py-8 sm:py-10 md:py-12 bg-[#FCFCFC] border-b border-gray-50">
             <CognitivePersonalization
               currentWiki={data}
               onWikiUpdate={onWikiUpdate}
@@ -526,7 +526,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
         {/* Feature 6: Live Resources Panel */}
         {data.liveResources && data.liveResources.length > 0 && (
-          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+          <div className="px-4 sm:px-6 md:px-12 lg:px-20 py-8 sm:py-10 md:py-12 bg-[#FCFCFC] border-b border-gray-50">
             <LiveResources resources={data.liveResources} />
           </div>
         )}
@@ -543,7 +543,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
         {/* Feature 11: Infographics Panel */}
         {data.sections && (
-          <div className="px-8 md:px-20 py-12 bg-[#FCFCFC] border-b border-gray-50">
+          <div className="px-4 sm:px-6 md:px-12 lg:px-20 py-8 sm:py-10 md:py-12 bg-[#FCFCFC] border-b border-gray-50">
             <Infographics wiki={data} />
           </div>
         )}
@@ -565,21 +565,21 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
         {/* Sections */}
         <div className="divide-y divide-gray-50">
           {data.sections?.map((section, idx) => (
-            <article key={idx} id={`section-${idx}`} className="px-8 md:px-20 py-24 scroll-mt-20">
+            <article key={idx} id={`section-${idx}`} className="px-4 sm:px-6 md:px-12 lg:px-20 py-12 sm:py-16 md:py-24 scroll-mt-20">
               <div className="flex flex-col gap-10">
 
                 <header className="flex items-center justify-between group">
                   <div className="flex items-center gap-6">
-                    <span className="font-serif text-3xl text-gray-200 italic">
+                    <span className="font-serif text-2xl sm:text-3xl text-gray-200 italic">
                       {formatSectionNumber(idx)}
                     </span>
-                    <h2 className="font-serif text-4xl text-earth-brown tracking-tight leading-tight">
+                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-earth-brown tracking-tight leading-tight">
                       {section.heading}
                     </h2>
                   </div>
                   <button
                     onClick={() => handleTTS(idx, section.content)}
-                    className="p-3 rounded-full bg-gray-50 text-terracotta hover:bg-terracotta hover:text-white transition-all print:hidden"
+                    className="p-3 sm:p-2 rounded-full bg-gray-50 text-terracotta hover:bg-terracotta hover:text-white transition-all print:hidden active:scale-95"
                     title="Read Section Aloud"
                   >
                     {ttsState.idx === idx && ttsState.status === 'playing' ? (
@@ -594,7 +594,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
                   </button>
                 </header>
 
-                <div className="prose prose-lg prose-p:text-earth-brown/70 prose-p:leading-[1.8] prose-p:font-light max-w-none whitespace-pre-wrap selection:bg-soft-yellow/50">
+                <div className="prose prose-sm sm:prose-base md:prose-lg prose-p:text-earth-brown/70 prose-p:leading-[1.8] prose-p:font-light max-w-none whitespace-pre-wrap selection:bg-soft-yellow/50">
                   {formatContent(section.content || '')}
                 </div>
 
@@ -602,8 +602,8 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
                 <DevilsAdvocate section={section} sectionNumber={idx} />
 
                 {/* Key Points + Citations */}
-                <div className="grid md:grid-cols-5 gap-6 mt-12">
-                  <div className="md:col-span-3 bg-[#FAFAFA] p-8 rounded-2xl border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6 mt-8 sm:mt-12">
+                  <div className="md:col-span-3 col-span-1 bg-[#FAFAFA] p-8 rounded-2xl border border-gray-100">
                     <h4 className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2">
                       Technical Points
                     </h4>
@@ -616,7 +616,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
                       ))}
                     </ul>
                   </div>
-                  <div className="md:col-span-2 bg-[#FAFAFA] p-8 rounded-2xl border border-gray-100">
+                  <div className="md:col-span-2 col-span-1 bg-[#FAFAFA] p-8 rounded-2xl border border-gray-100">
                     <h4 className="text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-6 border-b border-gray-200 pb-2">
                       Verification
                     </h4>
@@ -640,12 +640,12 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
         {/* Glossary Section */}
         {glossaryItems.length > 0 && (
-          <article id="section-glossary" className="px-8 md:px-20 py-24 bg-[#FCFCFC] scroll-mt-20">
+          <article id="section-glossary" className="px-4 sm:px-6 md:px-12 lg:px-20 py-12 sm:py-16 md:py-24 bg-[#FCFCFC] scroll-mt-20">
             <div className="max-w-3xl">
               <div className="inline-block text-terracotta text-[10px] font-bold uppercase tracking-[0.4em] mb-4">
                 Terminology Index
               </div>
-              <h2 className="font-serif text-5xl text-earth-brown mb-12 tracking-tight">Glossary</h2>
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-earth-brown mb-8 sm:mb-12 tracking-tight">Glossary</h2>
 
               <div className="space-y-10">
                 {glossaryItems.map((item, idx) => (
@@ -691,14 +691,14 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
         {/* Related Topics Footer */}
         {data.relatedTopics && data.relatedTopics.length > 0 && (
-          <footer className="bg-white px-8 md:px-20 py-24 text-center border-t border-gray-50">
+          <footer className="bg-white px-4 sm:px-6 md:px-12 lg:px-20 py-12 sm:py-16 md:py-24 text-center border-t border-gray-50">
             <h3 className="font-serif text-3xl text-earth-brown mb-12">Expand Topic Analysis</h3>
-            <div className="flex flex-wrap gap-4 justify-center max-w-2xl mx-auto">
+            <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 justify-center max-w-2xl mx-auto px-4">
               {data.relatedTopics.map((topic, idx) => (
                 <button
                   key={idx}
                   onClick={() => onTopicSelect(topic)}
-                  className="px-6 py-3 bg-white hover:bg-earth-brown border border-gray-200 hover:border-earth-brown text-sm text-gray-500 hover:text-white rounded-xl transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-white hover:bg-earth-brown border border-gray-200 hover:border-earth-brown text-xs sm:text-sm text-gray-500 hover:text-white rounded-lg sm:rounded-xl transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1"
                 >
                   {topic}
                 </button>
@@ -710,7 +710,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
       {/* Chat Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-screen w-full md:w-80 bg-white border-l border-gray-100 shadow-xl flex flex-col transition-transform duration-300 z-50 ${
+        className={`fixed top-0 right-0 h-screen w-full sm:w-96 md:w-80 bg-white border-l border-gray-100 shadow-xl flex flex-col transition-transform duration-300 z-50 ${
           isChatOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -718,7 +718,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
           <h3 className="font-serif text-2xl text-earth-brown">Wiki Chat</h3>
           <button
             onClick={() => setIsChatOpen(false)}
-            className="text-gray-400 hover:text-terracotta"
+            className="text-gray-400 hover:text-terracotta p-2 -m-2"
             aria-label="Close chat"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -766,12 +766,12 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Ask a question..."
-            className="flex-1 bg-gray-50 border border-transparent rounded-full px-4 py-2 text-sm focus:outline-none focus:border-terracotta/30 focus:bg-white transition-all text-earth-brown"
+            className="flex-1 bg-gray-50 border border-transparent rounded-full px-4 py-3 sm:py-2 text-sm focus:outline-none focus:border-terracotta/30 focus:bg-white transition-all text-earth-brown"
           />
           <button
             type="submit"
             disabled={!chatInput.trim() || isChatLoading}
-            className={`p-2 rounded-full ${
+            className={`p-3 sm:p-2 rounded-full ${
               chatInput.trim() && !isChatLoading
                 ? 'bg-terracotta text-white'
                 : 'bg-gray-100 text-gray-400'
