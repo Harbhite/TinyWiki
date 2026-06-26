@@ -39,18 +39,18 @@ const GlossaryTerm: React.FC<{ term: string; definition?: string }> = ({ term, d
       <div
         className={`
           fixed sm:absolute bottom-auto sm:bottom-full left-1/2 -translate-x-1/2 mb-0 sm:mb-4 w-64 sm:w-72 md:w-80 p-3 sm:p-4 mt-2 sm:mt-0 sm:top-auto top-1/2 sm:top-auto
-          bg-earth-brown text-white rounded-xl shadow-2xl
+          bg-white text-earth-brown rounded-xl shadow-2xl border border-terracotta/20
           text-xs leading-relaxed font-sans
           transition-all duration-300 pointer-events-none transform origin-bottom
           ${showTooltip ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'}
         `}
       >
-        <p className="font-bold mb-1 border-b border-white/10 pb-1">{term}</p>
-        <p className="text-white/80 font-light">
+        <p className="font-bold mb-1 border-b border-earth-brown/10 pb-1 text-terracotta">{term}</p>
+        <p className="text-earth-brown/80 font-medium">
           {definition || 'Core concept identified from materials.'}
         </p>
         <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] w-4 h-2 overflow-hidden">
-          <div className="w-2 h-2 bg-earth-brown transform rotate-45 mx-auto -translate-y-1"></div>
+          <div className="w-2 h-2 bg-white border-r border-b border-terracotta/20 transform rotate-45 mx-auto -translate-y-1"></div>
         </div>
       </div>
     </span>
