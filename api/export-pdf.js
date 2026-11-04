@@ -29,12 +29,23 @@ function getAppOrigin(req) {
     throw Object.assign(new Error('PDF export requests must come from TinyWiki.'), { statusCode: 403 });
   }
 
-  // Vercel supplies its deployment hostname. Locally, use the same-origin Host
-  // received by the Vite middleware so the renderer cannot be pointed at an
-  // arbitrary URL supplied in the request body.
-  const host = process.env.VERCEL_URL || req.headers.host;
+  const requestHost = String(req.headers.host || '').toLowerCase();
+  const isVercel = Boolean(process.env.VERCEL_URL);
+  // A deployment-specific VERCEL_URL may be protected by Vercel auth, so load
+  // the public production alias when a function renders its own app page.
+  const productionHost = String(process.env.VERCEL_PROJECT_PRODUCTION_URL || 'tiniwiki.vercel.app')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '')
+    .toLowerCase();
+  if (isVercel && requestHost !== productionHost && requestHost !== String(process.env.VERCEL_URL).toLowerCase()) {
+    throw Object.assign(new Error('PDF export requests must use the TinyWiki production domain.'), { statusCode: 403 });
+  }
+
+  // Locally, use the same-origin Host received by Vite. In production, the
+  // allow-listed public domain prevents arbitrary host-based server-side fetches.
+  const host = isVercel ? productionHost : requestHost;
   if (!host || !/^[a-z0-9.-]+(?::\d+)?$/i.test(host)) throw new Error('Could not determine the application host.');
-  const protocol = process.env.VERCEL_URL ? 'https' : (req.headers.origin?.startsWith('https://') ? 'https' : 'http');
+  const protocol = isVercel ? 'https' : (requestOrigin?.startsWith('https://') ? 'https' : 'http');
   return `${protocol}://${host}`;
 }
 
