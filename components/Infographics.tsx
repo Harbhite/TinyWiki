@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { WikiData, InfographicData } from '../types';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface InfographicsProps {
   wiki: WikiData;
@@ -12,6 +13,7 @@ interface InfographicsProps {
  * Caters to visual learners who struggle with long-form text.
  */
 export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicData }) => {
+  const { isDark } = useDarkMode();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -25,19 +27,19 @@ export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicDat
     const height = canvas.height;
 
     // Clear canvas
-    ctx.fillStyle = '#FAFAFA';
+    ctx.fillStyle = isDark ? '#221a12' : '#FAFAFA';
     ctx.fillRect(0, 0, width, height);
 
     if (infographicData.type === 'timeline') {
-      drawTimeline(ctx, width, height, infographicData.elements);
+      drawTimeline(ctx, width, height, infographicData.elements, isDark);
     } else if (infographicData.type === 'hierarchy') {
-      drawHierarchy(ctx, width, height, infographicData.elements);
+      drawHierarchy(ctx, width, height, infographicData.elements, isDark);
     } else if (infographicData.type === 'process') {
-      drawProcess(ctx, width, height, infographicData.elements);
+      drawProcess(ctx, width, height, infographicData.elements, isDark);
     }
-  }, [infographicData]);
+  }, [infographicData, isDark]);
 
-  const drawTimeline = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
+  const drawTimeline = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[], dark: boolean) => {
     const centerY = height / 2;
     const spacing = width / (elements.length + 1);
 
@@ -60,20 +62,20 @@ export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicDat
       ctx.fill();
 
       // Event label
-      ctx.fillStyle = '#272320';
+      ctx.fillStyle = dark ? '#E8DDD5' : '#272320';
       ctx.font = 'bold 12px Inter';
       ctx.textAlign = 'center';
       ctx.fillText(element.label, x, centerY - 30);
 
       // Event description
       ctx.font = '10px Inter';
-      ctx.fillStyle = '#5C4033';
+      ctx.fillStyle = dark ? '#C7B9AE' : '#5C4033';
       const desc = element.description.substring(0, 30) + (element.description.length > 30 ? '...' : '');
       ctx.fillText(desc, x, centerY + 30);
     });
   };
 
-  const drawHierarchy = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
+  const drawHierarchy = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[], dark: boolean) => {
     const padding = 40;
     const boxWidth = (width - padding * 2) / Math.max(elements.length, 1);
     const boxHeight = 60;
@@ -83,25 +85,25 @@ export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicDat
       const y = height / 2 - boxHeight / 2;
 
       // Box
-      ctx.fillStyle = '#FDFCF8';
+      ctx.fillStyle = dark ? '#342820' : '#FDFCF8';
       ctx.strokeStyle = '#C0614B';
       ctx.lineWidth = 2;
       ctx.fillRect(x, y, 100, boxHeight);
       ctx.strokeRect(x, y, 100, boxHeight);
 
       // Text
-      ctx.fillStyle = '#272320';
+      ctx.fillStyle = dark ? '#E8DDD5' : '#272320';
       ctx.font = 'bold 11px Inter';
       ctx.textAlign = 'center';
       ctx.fillText(element.label, x + 50, y + 20);
 
       ctx.font = '9px Inter';
-      ctx.fillStyle = '#5C4033';
+      ctx.fillStyle = dark ? '#C7B9AE' : '#5C4033';
       ctx.fillText(element.description.substring(0, 15), x + 50, y + 40);
 
       // Connector lines
       if (idx < elements.length - 1) {
-        ctx.strokeStyle = '#E5E0D8';
+        ctx.strokeStyle = dark ? '#59483e' : '#E5E0D8';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(x + 100, y + boxHeight / 2);
@@ -111,7 +113,7 @@ export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicDat
     });
   };
 
-  const drawProcess = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[]) => {
+  const drawProcess = (ctx: CanvasRenderingContext2D, width: number, height: number, elements: any[], dark: boolean) => {
     const padding = 40;
     const stepHeight = (height - padding * 2) / elements.length;
 
@@ -132,20 +134,20 @@ export const Infographics: React.FC<InfographicsProps> = ({ wiki, infographicDat
       ctx.fillText(String(idx + 1), 40, y);
 
       // Step box
-      ctx.fillStyle = '#FAFAFA';
-      ctx.strokeStyle = '#E5E0D8';
+      ctx.fillStyle = dark ? '#342820' : '#FAFAFA';
+      ctx.strokeStyle = dark ? '#59483e' : '#E5E0D8';
       ctx.lineWidth = 1;
       ctx.fillRect(70, y - 25, width - 120, 50);
       ctx.strokeRect(70, y - 25, width - 120, 50);
 
       // Step text
-      ctx.fillStyle = '#272320';
+      ctx.fillStyle = dark ? '#E8DDD5' : '#272320';
       ctx.font = 'bold 11px Inter';
       ctx.textAlign = 'left';
       ctx.fillText(element.label, 80, y - 10);
 
       ctx.font = '9px Inter';
-      ctx.fillStyle = '#5C4033';
+      ctx.fillStyle = dark ? '#C7B9AE' : '#5C4033';
       ctx.fillText(element.description.substring(0, 40), 80, y + 10);
 
       // Arrow to next step

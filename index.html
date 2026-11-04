@@ -4,6 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="TinyWiki — Transform any topic, YouTube video, or document into a beautiful, structured, AI-powered wiki in seconds." />
+    <script>
+      try {
+        if (localStorage.getItem('tinywiki_dark_mode') === 'true') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_) {}
+    </script>
     <title>TinyWiki - Organic Learning</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,15 +67,38 @@
       }
 
       /* Dark mode overrides */
+      html.dark { color-scheme: dark; }
       html.dark body { background-color: #1a1410 !important; color: #e8ddd5 !important; }
       html.dark .bg-beige-bg { background-color: #1a1410 !important; }
-      html.dark .bg-white { background-color: #2a2018 !important; color: #e8ddd5; }
+      html.dark [class~="bg-beige-bg/90"], html.dark [class~="bg-beige-bg/95"] { background-color: rgba(26, 20, 16, 0.96) !important; }
+      html.dark header[class~="bg-beige-bg/90"] { background-color: rgba(26, 20, 16, 0.96) !important; }
+      html.dark #mobile-navigation { background-color: #1a1410 !important; }
+      html.dark .bg-white { background-color: #2a2018 !important; color: #e8ddd5 !important; }
       html.dark .bg-\[\#FAFAFA\], html.dark .bg-\[\#FCFCFC\] { background-color: #221a12 !important; }
-      html.dark .border-gray-100, html.dark .border-gray-200 { border-color: #3a2e24 !important; }
+      html.dark [class~="bg-[#FAFAFA]"], html.dark [class~="bg-[#FCFCFC]"] { background-color: #221a12 !important; }
+      html.dark .bg-gray-50, html.dark .bg-gray-100 { background-color: #30251e !important; }
+      html.dark .bg-earth-brown { background-color: #59473d !important; }
       html.dark .text-earth-brown { color: #e8ddd5 !important; }
-      html.dark .bg-gray-50, html.dark .bg-gray-100 { background-color: #2e2218 !important; }
-      html.dark .text-gray-400, html.dark .text-gray-500 { color: #9a8880 !important; }
-      html.dark .text-gray-300 { color: #6a5e58 !important; }
+      html.dark [class~="text-earth-brown/90"], html.dark [class~="text-earth-brown/80"],
+      html.dark [class~="text-earth-brown/75"], html.dark [class~="text-earth-brown/70"],
+      html.dark [class~="text-earth-brown/60"], html.dark [class~="text-earth-brown/50"],
+      html.dark [class~="text-earth-brown/40"], html.dark [class~="text-earth-brown/30"],
+      html.dark [class~="text-earth-brown/20"] { color: #c7b9ae !important; }
+      html.dark .text-gray-600, html.dark .text-gray-700, html.dark .text-gray-800 { color: #d8cbc1 !important; }
+      html.dark .text-gray-400, html.dark .text-gray-500 { color: #b7a79b !important; }
+      html.dark .text-gray-300 { color: #aa998d !important; }
+      html.dark .text-gray-200 { color: #84756b !important; }
+      html.dark .border-gray-50, html.dark .border-gray-100, html.dark .border-gray-200,
+      html.dark .border-gray-300 { border-color: #493a31 !important; }
+      html.dark [class~="border-[#E5E0D8]"] { border-color: #59483e !important; }
+      html.dark [class~="border-earth-brown/5"], html.dark [class~="border-earth-brown/10"] { border-color: #493a31 !important; }
+      html.dark input:not([type="file"]), html.dark textarea, html.dark select {
+        background-color: #2a2018 !important;
+        color: #e8ddd5 !important;
+        border-color: #59483e !important;
+      }
+      html.dark input.text-earth-brown { color: #e8ddd5 !important; }
+      html.dark input::placeholder, html.dark textarea::placeholder { color: #ad9b8f !important; }
 
       .scrollbar-hide::-webkit-scrollbar {
           display: none;

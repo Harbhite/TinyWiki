@@ -18,6 +18,7 @@ const AppInner: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [wikiData, setWikiData] = useState<WikiData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggle: toggleDark } = useDarkMode();
 
   // Ref forwarded to the topic input in HeroSection for keyboard shortcut "/"
@@ -107,6 +108,7 @@ const AppInner: React.FC = () => {
   };
 
   const resetApp = () => {
+    setMobileMenuOpen(false);
     window.history.pushState({}, '', window.location.pathname);
     setWikiData(null);
     setAppState(AppState.IDLE);
@@ -115,6 +117,7 @@ const AppInner: React.FC = () => {
   };
 
   const navigateTo = (state: AppState) => {
+    setMobileMenuOpen(false);
     setAppState(state);
     window.scrollTo(0, 0);
   };
@@ -140,7 +143,7 @@ const AppInner: React.FC = () => {
         onFocusInput={focusTopicInput}
       />
 
-      <header className="px-6 py-4 md:px-12 md:py-6 flex items-center justify-between sticky top-0 z-40 bg-beige-bg/80 backdrop-blur-md border-b border-earth-brown/5 transition-all duration-300">
+      <header className="relative px-4 py-3 sm:px-6 md:px-12 md:py-6 flex items-center justify-between sticky top-0 z-50 bg-beige-bg/90 backdrop-blur-md border-b border-earth-brown/5 transition-all duration-300">
         <div
           className="cursor-pointer group flex items-center gap-2"
           onClick={resetApp}
@@ -155,7 +158,7 @@ const AppInner: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4 md:gap-8">
-          <nav className="flex gap-4 md:gap-8 font-medium text-sm text-earth-brown/60" aria-label="Main navigation">
+          <nav className="hidden md:flex gap-8 font-medium text-sm text-earth-brown/60" aria-label="Main navigation">
             <button
               onClick={() => navigateTo(AppState.HISTORY)}
               className={`transition-colors hover:text-earth-brown ${appState === AppState.HISTORY ? 'text-terracotta font-semibold' : ''}`}
@@ -179,7 +182,7 @@ const AppInner: React.FC = () => {
           {/* Feature 2: Dark Mode Toggle */}
           <button
             onClick={toggleDark}
-            className="p-2 rounded-full bg-earth-brown/5 hover:bg-earth-brown/10 transition-colors text-earth-brown/60 hover:text-earth-brown"
+            className="shrink-0 p-2 rounded-full bg-earth-brown/5 hover:bg-earth-brown/10 transition-colors text-earth-brown/60 hover:text-earth-brown"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             title={isDark ? 'Light Mode' : 'Dark Mode'}
           >
@@ -194,6 +197,25 @@ const AppInner: React.FC = () => {
             )}
           </button>
 
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="md:hidden shrink-0 p-2 rounded-full bg-earth-brown/5 hover:bg-earth-brown/10 transition-colors text-earth-brown/70"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            )}
+          </button>
+
           {appState !== AppState.IDLE && (
             <button
               onClick={resetApp}
@@ -203,6 +225,34 @@ const AppInner: React.FC = () => {
             </button>
           )}
         </div>
+
+        <nav
+          id="mobile-navigation"
+          className={`${mobileMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-full inset-x-0 border-t border-earth-brown/10 bg-beige-bg/95 px-4 py-3 shadow-lg backdrop-blur-xl`}
+          aria-label="Mobile navigation"
+        >
+          {[
+            { label: 'Library', state: AppState.HISTORY },
+            { label: 'About', state: AppState.ABOUT },
+            { label: 'Features', state: AppState.FEATURES },
+          ].map(({ label, state }) => (
+            <button
+              key={state}
+              onClick={() => navigateTo(state)}
+              className={`block w-full rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-earth-brown/5 ${appState === state ? 'text-terracotta' : 'text-earth-brown/75'}`}
+            >
+              {label}
+            </button>
+          ))}
+          {appState !== AppState.IDLE && (
+            <button
+              onClick={resetApp}
+              className="mt-2 block w-full rounded-xl bg-earth-brown px-4 py-3 text-left text-sm font-medium text-white transition-colors hover:bg-terracotta"
+            >
+              New Wiki
+            </button>
+          )}
+        </nav>
       </header>
 
       <main className="transition-opacity duration-300 ease-in-out">

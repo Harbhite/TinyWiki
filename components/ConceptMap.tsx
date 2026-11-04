@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ConceptNode, ConceptEdge } from '../types';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface ConceptMapProps {
   nodes: ConceptNode[];
@@ -19,6 +20,7 @@ export const ConceptMap: React.FC<ConceptMapProps> = ({
   onNodeClick,
   onClose,
 }) => {
+  const { isDark } = useDarkMode();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [positions, setPositions] = useState<Map<string, { x: number; y: number }>>(
@@ -113,11 +115,11 @@ export const ConceptMap: React.FC<ConceptMapProps> = ({
     const height = canvas.height;
 
     // Clear canvas
-    ctx.fillStyle = '#FAFAFA';
+    ctx.fillStyle = isDark ? '#221a12' : '#FAFAFA';
     ctx.fillRect(0, 0, width, height);
 
     // Draw edges
-    ctx.strokeStyle = '#E5E0D8';
+    ctx.strokeStyle = isDark ? '#59483e' : '#E5E0D8';
     ctx.lineWidth = 2;
     edges.forEach((edge) => {
       const from = positions.get(edge.source);
@@ -144,8 +146,8 @@ export const ConceptMap: React.FC<ConceptMapProps> = ({
       const isSelected = selectedNode === node.id;
 
       // Node circle
-      ctx.fillStyle = isSelected ? '#C0614B' : '#FFFFFF';
-      ctx.strokeStyle = isSelected ? '#C0614B' : '#E5E0D8';
+      ctx.fillStyle = isSelected ? '#C0614B' : (isDark ? '#342820' : '#FFFFFF');
+      ctx.strokeStyle = isSelected ? '#C0614B' : (isDark ? '#59483e' : '#E5E0D8');
       ctx.lineWidth = isSelected ? 3 : 2;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, isSelected ? 25 : 20, 0, Math.PI * 2);
@@ -153,14 +155,14 @@ export const ConceptMap: React.FC<ConceptMapProps> = ({
       ctx.stroke();
 
       // Node label
-      ctx.fillStyle = isSelected ? '#FFFFFF' : '#272320';
+      ctx.fillStyle = isSelected ? '#FFFFFF' : (isDark ? '#E8DDD5' : '#272320');
       ctx.font = 'bold 11px Inter';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const label = node.label.length > 15 ? node.label.substring(0, 12) + '...' : node.label;
       ctx.fillText(label, pos.x, pos.y);
     });
-  }, [nodes, edges, positions, selectedNode]);
+  }, [nodes, edges, positions, selectedNode, isDark]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
