@@ -83,6 +83,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<number | string>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [ttsState, setTtsState] = useState<{
     idx: number | string;
     status: 'playing' | 'paused' | 'stopped';
@@ -159,7 +160,40 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
         setTimeout(() => setCopyFeedback(false), 2000);
       });
     } catch (_err) {
-      alert('Note: Wiki content exceeds link limits. Use browser print to save.');
+      alert('Note: Wiki content exceeds link limits. Use PDF to download a copy.');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (pdfExporting) return;
+    setPdfExporting(true);
+    try {
+      const response = await fetch('/api/export-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wikiData: data, viewportWidth: window.innerWidth }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.error || 'PDF download failed. Please try again.');
+      }
+
+      const pdf = await response.blob();
+      const downloadUrl = URL.createObjectURL(pdf);
+      const link = document.createElement('a');
+      const filename = data.title.replace(/[^\p{L}\p{N}._ -]/gu, '').trim().replace(/\s+/g, '_') || 'tinywiki';
+      link.href = downloadUrl;
+      link.download = `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      window.alert(error instanceof Error ? error.message : 'PDF download failed. Please try again.');
+    } finally {
+      setPdfExporting(false);
     }
   };
 
@@ -380,16 +414,18 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
                 <span className="text-[9px] font-bold uppercase">QA Chat</span>
               </button>
 
-              {/* Export the rendered wiki through the browser's native PDF/print pipeline. */}
+              {/* Download a selectable PDF rendered from the current wiki page. */}
               <button
-                onClick={() => window.print()}
+                onClick={handleExportPDF}
+                disabled={pdfExporting}
                 className="flex flex-col items-center justify-center p-3 rounded-xl transition-all border bg-gray-50 text-gray-400 hover:text-earth-brown hover:bg-gray-100 border-gray-100"
-                title="Export wiki as PDF"
+                title="Download wiki as PDF"
+                aria-label="Download wiki as PDF"
               >
                 <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span className="text-[9px] font-bold uppercase">PDF</span>
+                <span className="text-[9px] font-bold uppercase">{pdfExporting ? 'Saving' : 'PDF'}</span>
               </button>
 
               {/* Feature 4: Flashcards */}
