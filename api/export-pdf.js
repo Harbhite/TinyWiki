@@ -51,6 +51,7 @@ export default async function handler(req, res) {
   }
 
   let browser;
+  let stage = 'read-request';
   try {
     const { wikiData, viewportWidth } = await readBody(req);
     if (!wikiData || typeof wikiData.title !== 'string' || !Array.isArray(wikiData.sections)) {
@@ -59,10 +60,12 @@ export default async function handler(req, res) {
     }
 
     const width = Math.max(360, Math.min(1920, Number(viewportWidth) || 1280));
+    stage = 'prepare-page-url';
     const origin = getAppOrigin(req);
     const shareToken = createShareToken(wikiData);
     const pageUrl = `${origin}/?share=${encodeURIComponent(shareToken)}`;
 
+    stage = 'launch-chromium';
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width, height: 1000, deviceScaleFactor: 1 },
@@ -70,15 +73,19 @@ export default async function handler(req, res) {
       headless: 'shell',
     });
 
+    stage = 'load-wiki-page';
     const page = await browser.newPage();
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 45_000 });
+    stage = 'wait-for-wiki-content';
     await page.waitForSelector('#section-0', { timeout: 20_000 });
+    stage = 'prepare-print';
     await page.emulateMediaType('print');
     await page.evaluate(() => Promise.race([
       document.fonts.ready,
       new Promise((resolve) => setTimeout(resolve, 5000)),
     ]));
 
+    stage = 'generate-pdf';
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -97,6 +104,7 @@ export default async function handler(req, res) {
     console.error('PDF export failed:', error);
     const status = error.statusCode || 500;
     res.statusCode = status;
+    res.setHeader('X-TinyWiki-PDF-Stage', stage);
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     return res.end(JSON.stringify({ error: status === 413 ? error.message : 'Could not create the PDF. Please try again.' }));
   } finally {
