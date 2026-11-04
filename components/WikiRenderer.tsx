@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { WikiData, Annotation } from '../types';
 import { Button } from './Button';
-import { chatWithWiki, exportWikiAsMarkdown, getEli5Explanation } from '../services/geminiService';
+import { chatWithWiki, getEli5Explanation } from '../services/geminiService';
 import { Flashcards } from './Flashcards';
 import { ReadingProgressBar } from './ReadingProgressBar';
 import { CognitivePersonalization } from './CognitivePersonalization';
@@ -83,7 +83,6 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<number | string>(0);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [exportFeedback, setExportFeedback] = useState(false);
   const [ttsState, setTtsState] = useState<{
     idx: number | string;
     status: 'playing' | 'paused' | 'stopped';
@@ -162,13 +161,6 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
     } catch (_err) {
       alert('Note: Wiki content exceeds link limits. Use browser print to save.');
     }
-  };
-
-  // Feature 1: Markdown Export
-  const handleExport = () => {
-    exportWikiAsMarkdown(data);
-    setExportFeedback(true);
-    setTimeout(() => setExportFeedback(false), 2000);
   };
 
   const handleTTS = (index: number | string, text: string) => {
@@ -388,20 +380,16 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
                 <span className="text-[9px] font-bold uppercase">QA Chat</span>
               </button>
 
-              {/* Feature 1: Export to Markdown */}
+              {/* Export the rendered wiki through the browser's native PDF/print pipeline. */}
               <button
-                onClick={handleExport}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all border ${
-                  exportFeedback
-                    ? 'bg-terracotta text-white border-terracotta'
-                    : 'bg-gray-50 text-gray-400 hover:text-earth-brown hover:bg-gray-100 border-gray-100'
-                }`}
-                title="Export as Markdown"
+                onClick={() => window.print()}
+                className="flex flex-col items-center justify-center p-3 rounded-xl transition-all border bg-gray-50 text-gray-400 hover:text-earth-brown hover:bg-gray-100 border-gray-100"
+                title="Export wiki as PDF"
               >
                 <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span className="text-[9px] font-bold uppercase">{exportFeedback ? 'Saved' : 'Export'}</span>
+                <span className="text-[9px] font-bold uppercase">PDF</span>
               </button>
 
               {/* Feature 4: Flashcards */}
