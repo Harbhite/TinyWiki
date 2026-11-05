@@ -25,11 +25,20 @@ function createShareToken(data) {
 
 function getAppOrigin(req) {
   const requestOrigin = req.headers.origin;
-  if (!requestOrigin || new URL(requestOrigin).host.toLowerCase() !== String(req.headers.host || '').toLowerCase()) {
+  let originHost = '';
+  if (requestOrigin) {
+    try {
+      originHost = new URL(requestOrigin).host.toLowerCase();
+    } catch {
+      throw Object.assign(new Error('PDF export requests must come from TinyWiki.'), { statusCode: 403 });
+    }
+  }
+
+  const requestHost = String(req.headers.host || req.headers[':authority'] || originHost).toLowerCase();
+  if (!requestHost || (originHost && originHost !== requestHost)) {
     throw Object.assign(new Error('PDF export requests must come from TinyWiki.'), { statusCode: 403 });
   }
 
-  const requestHost = String(req.headers.host || '').toLowerCase();
   const isVercel = Boolean(process.env.VERCEL_URL);
   // A deployment-specific VERCEL_URL may be protected by Vercel auth, so load
   // the public production alias when a function renders its own app page.
