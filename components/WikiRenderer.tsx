@@ -176,7 +176,9 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.error || 'PDF download failed. Please try again.');
+        const stage = response.headers.get('x-tinywiki-pdf-stage');
+        const message = error?.error || `PDF download failed (HTTP ${response.status}).`;
+        throw new Error(stage ? `${message} (stage: ${stage})` : message);
       }
 
       const pdf = await response.blob();
@@ -265,7 +267,7 @@ export const WikiRenderer: React.FC<WikiRendererProps> = ({
   const diffStyle = difficulty ? difficultyConfig[difficulty] : null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col md:flex-row">
+    <div data-wiki-renderer-ready="true" className="min-h-screen bg-[#FAFAFA] flex flex-col md:flex-row">
 
       {/* Feature 3: Reading Progress Bar */}
       <ReadingProgressBar />

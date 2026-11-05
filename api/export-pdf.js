@@ -86,9 +86,9 @@ export default async function handler(req, res) {
 
     stage = 'load-wiki-page';
     const page = await browser.newPage();
-    await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 45_000 });
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 20_000 });
     stage = 'wait-for-wiki-content';
-    await page.waitForSelector('#section-0', { timeout: 20_000 });
+    await page.waitForSelector('[data-wiki-renderer-ready="true"]', { timeout: 25_000 });
     stage = 'prepare-print';
     await page.emulateMediaType('print');
     await page.evaluate(() => Promise.race([
